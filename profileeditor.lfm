@@ -80,7 +80,9 @@ object FormEditProfile: TFormEditProfile
       Items.Strings = (
         'TCP'
         'KCP'
-        'Websocks'
+        'WebSocket'
+        'HTTP/2'
+        'QUIC'
       )
       OnChange = ComboBoxNetworkChange
       Style = csDropDownList

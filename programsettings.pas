@@ -24,7 +24,7 @@ type
     KCPReadBufferSize: word;
     KCPWriteBufferSize: word;
     KCPCongestionAlgorithm: boolean;
-    KCPHeaderType: TKCPHeaderType;
+    UDPHeaderType: TUDPHeaderType;
     DomainStrategy: TRouteDomainStrategy;
     MuxEnabled: boolean;
     MuxConcurrency: word;
@@ -55,7 +55,7 @@ begin
   KCPReadBufferSize := 2;
   KCPWriteBufferSize := 2;
   KCPCongestionAlgorithm := False;
-  KCPHeaderType := khNONE;
+  UDPHeaderType := uhNONE;
   DomainStrategy := dsNONMATCH;
   MuxEnabled := False;
   MuxConcurrency := 16;
@@ -89,7 +89,7 @@ begin
   KCPUplinkCapacity := J.Get('upcap', KCPUplinkCapacity);
   KCPDownlinkCapacity := J.Get('downcap', KCPDownlinkCapacity);
   KCPCongestionAlgorithm := J.Get('congestion', KCPCongestionAlgorithm);
-  KCPHeaderType := TKCPHeaderType(J.Get('khead', byte(KCPHeaderType)));
+  UDPHeaderType := TUDPHeaderType(J.Get('khead', byte(UDPHeaderType)));
   DomainStrategy := TRouteDomainStrategy(J.Get('domstg', byte(DomainStrategy)));
   MuxEnabled := J.Get('mux', MuxEnabled);
   MuxConcurrency := J.Get('muxcon', MuxConcurrency);
@@ -111,7 +111,7 @@ begin
     'log', byte(V2rayLogLevel), 'dns', DNSServers, 'mtu', KCPMTU,
     'tti', KCPTTI, 'upcap', KCPUplinkCapacity, 'downcap', KCPDownlinkCapacity,
     'rbsize', KCPReadBufferSize, 'wbsize', KCPWriteBufferSize,
-    'congestion', KCPCongestionAlgorithm, 'khead', byte(KCPHeaderType),
+    'congestion', KCPCongestionAlgorithm, 'khead', byte(UDPHeaderType),
     'domstg', byte(DomainStrategy), 'mux', MuxEnabled, 'muxcon',
     MuxConcurrency, 'route', TJSONArray.Create([Routes[1], Routes[2], Routes[3]])]).FormatJSON;
   F.WriteBuffer(Pointer(J)^, Length(J));

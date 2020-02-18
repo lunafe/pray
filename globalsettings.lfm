@@ -350,33 +350,6 @@ object FormGlobalSettings: TFormGlobalSettings
           Caption = 'WriteBufferSize:'
           ParentColor = False
         end
-        object LabelKCPHeader: TLabel
-          Left = 8
-          Height = 15
-          Top = 172
-          Width = 41
-          Caption = 'Header:'
-          ParentColor = False
-        end
-        object ComboBoxKCPHeaderType: TComboBox
-          Left = 72
-          Height = 23
-          Top = 168
-          Width = 100
-          ItemHeight = 15
-          ItemIndex = 0
-          Items.Strings = (
-            'none'
-            'srtp'
-            'utp'
-            'dtls'
-            'wechat-video'
-            'wireguard'
-          )
-          Style = csDropDownList
-          TabOrder = 7
-          Text = 'none'
-        end
       end
       object GroupBoxDNSServers: TGroupBox
         Left = 200
@@ -456,6 +429,44 @@ object FormGlobalSettings: TFormGlobalSettings
           Width = 71
           Anchors = [akTop, akRight]
           Caption = 'Concurrency:'
+          ParentColor = False
+        end
+      end
+      object GroupBoxUDP: TGroupBox
+        Left = 200
+        Height = 49
+        Top = 120
+        Width = 225
+        Caption = 'UDP'
+        ClientHeight = 29
+        ClientWidth = 221
+        TabOrder = 3
+        object ComboBoxUDPHeaderType: TComboBox
+          Left = 116
+          Height = 23
+          Top = 0
+          Width = 100
+          Anchors = [akTop, akRight]
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'none'
+            'srtp'
+            'utp'
+            'dtls'
+            'wechat-video'
+            'wireguard'
+          )
+          Style = csDropDownList
+          TabOrder = 0
+          Text = 'none'
+        end
+        object LabelUDPHeaderType: TLabel
+          Left = 7
+          Height = 15
+          Top = 4
+          Width = 67
+          Caption = 'Header type:'
           ParentColor = False
         end
       end

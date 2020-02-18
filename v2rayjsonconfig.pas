@@ -8,11 +8,12 @@ uses
   Classes, SysUtils, FPJson, RegExpr;
 
 type
-  TRemoteTransport = (rtTCP, rtKCP, rtWS);
-  TKCPHeaderType = (khNONE, khSRTP, khUTP, khDTLS, khWECHATVIDEO, khWIREGUARD);
+  TRemoteTransport = (rtTCP, rtKCP, rtWS, rtHTTP, rtQUIC);
+  TUDPHeaderType = (uhNONE, uhSRTP, uhUTP, uhDTLS, uhWECHATVIDEO, uhWIREGUARD);
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
   TRouteListType = (rlDIRECT, rlPROXY, rlDENY);
   TRouteDomainStrategy = (dsASIS, dsNONMATCH, dsDEMAND);
+  TQUICSecurity = (qsNONE, qsAES, qsCHACHA);
 
   TV2rayJsonConfig = class
     RemoteAddr: string;
@@ -42,18 +43,21 @@ type
     procedure SetUser(ID: string; Alter: word);
     procedure SetTransport(Transport: TRemoteTransport; Hostname: string = '';
       Path: string = '');
-    procedure SetKCPHeaderType(HeaderType: TKCPHeaderType);
+    procedure SetUDPHeaderType(HeaderType: TUDPHeaderType);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
     procedure SetSocksProxy(Port: word);
     procedure SetHTTPProxy(Port: word);
     procedure SetDNSServers(ServerListString: string);
+    procedure SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
     function ToJSON: TJSONObject;
   protected
     LogLevel: string;
     NetworkTransport: string;
-    KCPHeaderType: string;
+    UDPHeaderType: string;
     DomainStrategy: string;
+    QUICSecurity: string;
+    QUICKey: string;
   private
     RouteDirectDomainList: TStrings;
     RouteDirectIPList: TStrings;
@@ -97,7 +101,7 @@ begin
   LogLevel := 'debug';
   NetworkTransport := 'tcp';
   TLSServerName := '';
-  KCPHeaderType := 'none';
+  UDPHeaderType := 'none';
   KCPMTU := 1350;
   KCPTTI := 20;
   KCPUplinkCapacity := 5;
@@ -113,6 +117,7 @@ begin
   RouteDenyDomainList := TStringList.Create;
   RouteDenyIPList := TStringList.Create;
   DNSServers := TStringList.Create;
+  SetQUIC;
 end;
 
 procedure TV2rayJsonConfig.SetLogLevel(Level: TV2rayLogLevel);
@@ -143,6 +148,8 @@ begin
     rtTCP: NetworkTransport := 'tcp';
     rtKCP: NetworkTransport := 'kcp';
     rtWS: NetworkTransport := 'ws';
+    rtHTTP: NetworkTransport := 'http';
+    rtQUIC: NetworkTransport := 'quic';
     else
       NetworkTransport := 'tcp';
   end;
@@ -156,17 +163,17 @@ begin
   RemotePath := Path;
 end;
 
-procedure TV2rayJsonConfig.SetKCPHeaderType(HeaderType: TKCPHeaderType);
+procedure TV2rayJsonConfig.SetUDPHeaderType(HeaderType: TUDPHeaderType);
 begin
   case HeaderType of
-    khNONE: KCPHeaderType := 'none';
-    khSRTP: KCPHeaderType := 'srtp';
-    khUTP: KCPHeaderType := 'utp';
-    khDTLS: KCPHeaderType := 'dtls';
-    khWECHATVIDEO: KCPHeaderType := 'wechat-video';
-    khWIREGUARD: KCPHeaderType := 'wireguard';
+    uhNONE: UDPHeaderType := 'none';
+    uhSRTP: UDPHeaderType := 'srtp';
+    uhUTP: UDPHeaderType := 'utp';
+    uhDTLS: UDPHeaderType := 'dtls';
+    uhWECHATVIDEO: UDPHeaderType := 'wechat-video';
+    uhWIREGUARD: UDPHeaderType := 'wireguard';
     else
-      KCPHeaderType := 'none';
+      UDPHeaderType := 'none';
   end;
 end;
 
@@ -256,6 +263,17 @@ end;
 procedure TV2rayJsonConfig.SetDNSServers(ServerListString: string);
 begin
   DNSServers := CommaStringList(ServerListString);
+end;
+
+procedure TV2rayJsonConfig.SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
+begin
+  case Security of
+    qsNONE: QUICSecurity := 'none';
+    qsAES: QUICSecurity := 'aes-128-gcm';
+    qsCHACHA: QUICSecurity := 'chacha20-poly1305';
+    else QUICSecurity := 'none';
+  end;
+  if Security <> qsNONE then QUICKey := Key;
 end;
 
 function TV2rayJsonConfig.GenerateDNSServerJSON: TJSONArray;
@@ -369,15 +387,22 @@ begin
       'wsSettings', TJSONObject.Create([
         'path', RemotePath,
         'headers', TJSONObject.Create(['Host', RemoteHostname])]),
+      'httpSettings', TJSONObject.Create([
+        'host', TJSONArray.Create([RemoteHostname]),
+        'path', RemotePath]),
       'kcpSettings', TJSONObject.Create([
-        'header', TJSONObject.Create(['type', KCPHeaderType]),
+        'header', TJSONObject.Create(['type', UDPHeaderType]),
         'congestion', KCPCongestionAlgorithm,
         'mtu', KCPMTU,
         'tti', KCPTTI,
         'readBufferSize', KCPReadBufferSize,
         'writeBufferSize', KCPWriteBufferSize,
         'uplinkCapacity', KCPUplinkCapacity,
-        'downlinkCapacity', KCPDownlinkCapacity])])]);
+        'downlinkCapacity', KCPDownlinkCapacity]),
+      'quicSettings', TJSONObject.Create([
+        'security', QUICSecurity,
+        'key', QUICKey,
+        'header', TJSONObject.Create(['type', UDPHeaderType])])])]);
   Result := TJSONObject.Create([
     'log', TJSONObject.Create(['loglevel', LogLevel]),
     'dns', TJSONObject.Create(['servers', GenerateDNSServerJSON]),
