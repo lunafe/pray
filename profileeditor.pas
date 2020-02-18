@@ -14,6 +14,7 @@ type
 
   TFormEditProfile = class(TForm)
     ButtonSave: TButton;
+    CheckBoxEnableTLS: TCheckBox;
     ComboBoxNetwork: TComboBox;
     EditAddress: TEdit;
     EditPath: TEdit;
@@ -35,6 +36,7 @@ type
     SpinEditAlterID: TSpinEdit;
     procedure ButtonSaveClick(Sender: TObject);
     procedure ApplyProfile(Profile: TProfile);
+    procedure ComboBoxNetworkChange(Sender: TObject);
   private
     ProfileObj: TProfile;
   end;
@@ -56,6 +58,7 @@ begin
   ProfileObj.UUID := EditUUID.Text;
   ProfileObj.AlterID := SpinEditAlterID.Value;
   ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
+  ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
   ProfileObj.Path := EditPath.Text;
   FormEditProfile.Close;
@@ -69,9 +72,21 @@ begin
   EditUUID.Text := Profile.UUID;
   SpinEditAlterID.Value := Profile.AlterID;
   ComboBoxNetwork.ItemIndex := integer(Profile.Network);
+  CheckBoxEnableTLS.Checked := Profile.EnableTLS;
   EditHostname.Text := Profile.Hostname;
   EditPath.Text := Profile.Path;
   ProfileObj := Profile;
+end;
+
+procedure TFormEditProfile.ComboBoxNetworkChange(Sender: TObject);
+begin
+  if TRemoteTransport(ComboBoxNetwork.ItemIndex) = rtKCP then
+  begin
+    CheckBoxEnableTLS.Enabled := False;
+    CheckBoxEnableTLS.Checked := False;
+  end
+  else
+    CheckBoxEnableTLS.Enabled := True;
 end;
 
 end.

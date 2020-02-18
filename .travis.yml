@@ -21,11 +21,11 @@ before_script:
   - cd $HOME
 
 after_script:
-  - mkdir artifacts || true
+  - mkdir artifacts
   - mv Pray.exe artifacts/
   - cd artifacts
   - zip pray-ci-aritfacts.zip Pray.exe
-  - curl -T pray-ci-aritfacts.zip https://transfer.sh/pray-ci-aritfacts-$GITVER.zip
+  - curl -T pray-ci-aritfacts.zip https://transfer.sh/pray-ci-aritfacts-$GITVER.zip && echo || true
 
 
 jobs:

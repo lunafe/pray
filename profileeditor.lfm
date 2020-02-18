@@ -1,12 +1,12 @@
 object FormEditProfile: TFormEditProfile
   Left = 534
-  Height = 317
+  Height = 316
   Top = 315
   Width = 345
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Edit profile'
-  ClientHeight = 317
+  ClientHeight = 316
   ClientWidth = 345
   LCLVersion = '2.0.6.0'
   object GroupBoxUser: TGroupBox
@@ -54,11 +54,11 @@ object FormEditProfile: TFormEditProfile
   end
   object GroupBoxStream: TGroupBox
     Left = 8
-    Height = 97
+    Height = 96
     Top = 176
     Width = 329
     Caption = 'Stream'
-    ClientHeight = 77
+    ClientHeight = 76
     ClientWidth = 325
     TabOrder = 3
     object LabelNetwork: TLabel
@@ -70,7 +70,7 @@ object FormEditProfile: TFormEditProfile
       ParentColor = False
     end
     object ComboBoxNetwork: TComboBox
-      Left = 223
+      Left = 176
       Height = 23
       Top = 0
       Width = 96
@@ -82,6 +82,7 @@ object FormEditProfile: TFormEditProfile
         'KCP'
         'Websocks'
       )
+      OnChange = ComboBoxNetworkChange
       Style = csDropDownList
       TabOrder = 0
       Text = 'TCP'
@@ -100,7 +101,7 @@ object FormEditProfile: TFormEditProfile
       Top = 24
       Width = 191
       Anchors = [akTop, akLeft, akRight]
-      TabOrder = 1
+      TabOrder = 2
     end
     object LabelPath: TLabel
       Left = 8
@@ -116,7 +117,16 @@ object FormEditProfile: TFormEditProfile
       Top = 48
       Width = 191
       Anchors = [akTop, akLeft, akRight]
-      TabOrder = 2
+      TabOrder = 3
+    end
+    object CheckBoxEnableTLS: TCheckBox
+      Left = 280
+      Height = 19
+      Top = 2
+      Width = 39
+      Anchors = [akTop, akRight]
+      Caption = 'TLS'
+      TabOrder = 1
     end
   end
   object ButtonSave: TButton

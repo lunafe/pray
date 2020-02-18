@@ -146,7 +146,7 @@ begin
     else
       NetworkTransport := 'tcp';
   end;
-  if Hostname <> '' then
+  if (Hostname <> '') and (Transport <> rtKCP) then
   begin
     RemoteHostname := Hostname;
     I := RemoteHostname.IndexOf(':');
@@ -332,36 +332,69 @@ begin
   else
     TLSStr := 'none';
   if EnableLocalHTTPProxy then
-    InboundList.Add(TJSONObject.Create(
-      ['port', LocalHTTPProxyPort, 'listen', '127.0.0.1', 'protocol',
-      'http', 'settings', TJSONObject.Create]));
+    InboundList.Add(TJSONObject.Create([
+      'port', LocalHTTPProxyPort,
+      'listen', '127.0.0.1',
+      'protocol', 'http',
+      'settings', TJSONObject.Create]));
   if EnableLocalSocksProxy then
-    InboundList.Add(TJSONObject.Create(
-      ['port', LocalSocksProxyPort, 'listen', '127.0.0.1', 'protocol',
-      'socks', 'settings', TJSONObject.Create(['udp', EnableLocalSocksUDP])]));
-  OutboundProxy := TJSONObject.Create(['tag', 'proxy', 'protocol', 'vmess',
-    'settings', TJSONObject.Create(['vnext', TJSONArray.Create(
-    [TJSONObject.Create(['address', RemoteAddr, 'port', RemotePort, 'users',
-    TJSONArray.Create([TJSONObject.Create(['id', VMessUserID, 'level',
-    0, 'alterId', VMessUserAlterID])])])])]), 'mux',
-    TJSONObject.Create(['enabled', MuxEnabled, 'concurrency', MuxConcurrency]),
-    'streamSettings', TJSONObject.Create(['network', NetworkTransport,
-    'security', TLSStr, 'tlsSettings', TJSONObject.Create(
-    ['serverName', TLSServerName, 'allowInsecure', True]), 'wsSettings',
-    TJSONObject.Create(['path', RemotePath, 'headers',
-    TJSONObject.Create(['Host', RemoteHostname])]), 'kcpSettings',
-    TJSONObject.Create(['header', TJSONObject.Create(['type', KCPHeaderType]),
-    'congestion', KCPCongestionAlgorithm, 'mtu', KCPMTU, 'tti', KCPTTI,
-    'readBufferSize', KCPReadBufferSize, 'writeBufferSize', KCPWriteBufferSize,
-    'uplinkCapacity', KCPUplinkCapacity, 'downlinkCapacity', KCPDownlinkCapacity])])]);
-  Result := TJSONObject.Create(['log', TJSONObject.Create(['loglevel', LogLevel]),
-    'dns', TJSONObject.Create(['servers', GenerateDNSServerJSON]), 'routing',
-    TJSONObject.Create(['domainStrategy', DomainStrategy, 'rules', GenerateRouteJSON]),
-    'inbounds', InboundList, 'outbounds', TJSONArray.Create(
-    [OutboundProxy, TJSONObject.Create(
-    ['tag', 'direct', 'protocol', 'freedom', 'settings', TJSONObject.Create]),
-    TJSONObject.Create(['tag', 'deny', 'protocol', 'blackhole', 'settings',
-    TJSONObject.Create])])]);
+    InboundList.Add(TJSONObject.Create([
+      'port', LocalSocksProxyPort,
+      'listen', '127.0.0.1',
+      'protocol', 'socks',
+      'settings', TJSONObject.Create([
+        'udp', EnableLocalSocksUDP])]));
+  OutboundProxy := TJSONObject.Create([
+    'tag', 'proxy',
+    'protocol', 'vmess',
+    'settings', TJSONObject.Create([
+       'vnext', TJSONArray.Create([
+         TJSONObject.Create([
+           'address', RemoteAddr,
+           'port', RemotePort,
+           'users', TJSONArray.Create([
+             TJSONObject.Create([
+               'id', VMessUserID,
+               'level', 0,
+               'alterId', VMessUserAlterID])])])])]),
+    'mux', TJSONObject.Create([
+      'enabled', MuxEnabled,
+      'concurrency', MuxConcurrency]),
+    'streamSettings', TJSONObject.Create([
+      'network', NetworkTransport,
+      'security', TLSStr,
+      'tlsSettings', TJSONObject.Create([
+        'serverName', TLSServerName,
+        'allowInsecure', True]),
+      'wsSettings', TJSONObject.Create([
+        'path', RemotePath,
+        'headers', TJSONObject.Create(['Host', RemoteHostname])]),
+      'kcpSettings', TJSONObject.Create([
+        'header', TJSONObject.Create(['type', KCPHeaderType]),
+        'congestion', KCPCongestionAlgorithm,
+        'mtu', KCPMTU,
+        'tti', KCPTTI,
+        'readBufferSize', KCPReadBufferSize,
+        'writeBufferSize', KCPWriteBufferSize,
+        'uplinkCapacity', KCPUplinkCapacity,
+        'downlinkCapacity', KCPDownlinkCapacity])])]);
+  Result := TJSONObject.Create([
+    'log', TJSONObject.Create(['loglevel', LogLevel]),
+    'dns', TJSONObject.Create(['servers', GenerateDNSServerJSON]),
+    'routing', TJSONObject.Create([
+      'domainStrategy', DomainStrategy,
+      'rules', GenerateRouteJSON]),
+    'inbounds', InboundList,
+    'outbounds', TJSONArray.Create([
+      OutboundProxy,
+      TJSONObject.Create([
+        'tag', 'direct',
+        'protocol', 'freedom',
+        'settings', TJSONObject.Create]),
+      TJSONObject.Create([
+        'tag', 'deny',
+        'protocol', 'blackhole',
+        'settings', TJSONObject.Create])])]);
 end;
 
 end.

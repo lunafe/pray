@@ -88,7 +88,8 @@ begin
         Content := '';
       end;
     except
-      on EReadError do Synchronize(@ProcessStoped);
+      on EReadError do
+        Synchronize(@ProcessStoped);
     end;
   end;
 end;
@@ -108,6 +109,7 @@ begin
   PrayMainWindow.MemoV2rayOutput.Lines.Add('! v2ray process stoped.');
   PrayMainWindow.BitBtnDisconnectClick(nil);
 end;
+
 {$R *.lfm}
 
 procedure TPrayMainWindow.ButtonAddProfileClick(Sender: TObject);
@@ -155,7 +157,7 @@ begin
     end;
     V2Thread := TV2rayWatchThread.Create(True, V2RayProcess);
     V2Thread.Start;
-    StatusBarConnectionStatus.SimpleText:='Connected';
+    StatusBarConnectionStatus.SimpleText := 'Connected';
   end;
 end;
 
@@ -171,7 +173,7 @@ begin
       V2Thread.Terminate;
     finally
     end;
-  StatusBarConnectionStatus.SimpleText:='Disconnected';
+  StatusBarConnectionStatus.SimpleText := 'Disconnected';
 end;
 
 procedure TPrayMainWindow.ButtonEditProfileClick(Sender: TObject);
@@ -262,6 +264,7 @@ begin
     P.UUID := K.Get('id', '');
     P.AlterID := K.Get('aid', 0);
     P.Network := TRemoteTransport(K.Get('net', 0));
+    P.EnableTLS := K.Get('tls', False);
     P.Hostname := K.Get('host', '');
     P.Path := K.Get('path', '');
     ListBoxProfiles.Items.Add(P.Name);
@@ -282,9 +285,9 @@ begin
   for I in ProfileList do
   begin
     P := TProfile(I);
-    J.Add(TJSONObject.Create(['name', P.Name, 'addr', P.Address,
-      'port', P.Port, 'id', P.UUID, 'aid', P.AlterID, 'net',
-      integer(P.Network), 'host', P.Hostname, 'path', P.Path]));
+    J.Add(TJSONObject.Create(['name', P.Name, 'addr', P.Address, 'port',
+      P.Port, 'id', P.UUID, 'aid', P.AlterID, 'net', integer(P.Network),
+      'tls', P.EnableTLS, 'host', P.Hostname, 'path', P.Path]));
   end;
   S := J.AsJSON;
   F.WriteBuffer(Pointer(S)^, Length(S));
