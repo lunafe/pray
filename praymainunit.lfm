@@ -1,0 +1,122 @@
+object PrayMainWindow: TPrayMainWindow
+  Left = 418
+  Height = 332
+  Top = 227
+  Width = 628
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
+  Caption = 'Pray'
+  ClientHeight = 332
+  ClientWidth = 628
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  LCLVersion = '2.0.6.0'
+  object PanelMainPanel: TPanel
+    Left = 8
+    Height = 288
+    Top = 10
+    Width = 608
+    BorderStyle = bsSingle
+    ClientHeight = 284
+    ClientWidth = 604
+    TabOrder = 0
+    object ListBoxProfiles: TListBox
+      Left = 15
+      Height = 112
+      Top = 8
+      Width = 265
+      ItemHeight = 0
+      OnSelectionChange = ListBoxProfilesSelectionChange
+      TabOrder = 0
+    end
+    object BitBtnConnect: TBitBtn
+      Left = 288
+      Height = 48
+      Top = 8
+      Width = 104
+      Caption = 'Connect'
+      Font.Height = -15
+      OnClick = BitBtnConnectClick
+      ParentFont = False
+      TabOrder = 1
+    end
+    object BitBtnDisconnect: TBitBtn
+      Left = 288
+      Height = 48
+      Top = 64
+      Width = 104
+      Caption = 'Disconnect'
+      Font.Height = -15
+      OnClick = BitBtnDisconnectClick
+      ParentFont = False
+      TabOrder = 2
+    end
+    object MemoServerInfo: TMemo
+      Left = 400
+      Height = 114
+      Top = 8
+      Width = 192
+      BorderStyle = bsNone
+      Color = clMenu
+      Enabled = False
+      TabOrder = 3
+    end
+    object ButtonEditProfile: TButton
+      Left = 15
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Edit'
+      OnClick = ButtonEditProfileClick
+      TabOrder = 4
+    end
+    object ButtonRemoveProfile: TButton
+      Left = 88
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Remove'
+      OnClick = ButtonRemoveProfileClick
+      TabOrder = 5
+    end
+    object ButtonAddProfile: TButton
+      Left = 160
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Add'
+      OnClick = ButtonAddProfileClick
+      TabOrder = 6
+    end
+    object ButtonGlobalSettings: TButton
+      Left = 533
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Settings'
+      OnClick = ButtonGlobalSettingsClick
+      TabOrder = 7
+    end
+    object MemoV2rayOutput: TMemo
+      Left = 16
+      Height = 120
+      Top = 160
+      Width = 577
+      Color = clGrayText
+      ReadOnly = True
+      ScrollBars = ssAutoVertical
+      TabOrder = 8
+      TabStop = False
+      WantReturns = False
+      WordWrap = False
+    end
+  end
+  object StatusBarConnectionStatus: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 309
+    Width = 628
+    Panels = <>
+    SimpleText = 'Ready to connect'
+  end
+end

@@ -1,0 +1,452 @@
+object FormGlobalSettings: TFormGlobalSettings
+  Left = 417
+  Height = 303
+  Top = 304
+  Width = 454
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = 'Settings'
+  ClientHeight = 303
+  ClientWidth = 454
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '2.0.6.0'
+  object PageControlGlobalSettings: TPageControl
+    Left = 8
+    Height = 248
+    Top = 8
+    Width = 435
+    ActivePage = TabSheetGeneralSettings
+    TabIndex = 0
+    TabOrder = 0
+    object TabSheetGeneralSettings: TTabSheet
+      Caption = 'General'
+      ClientHeight = 220
+      ClientWidth = 427
+      object GroupBoxInbound: TGroupBox
+        Left = 8
+        Height = 81
+        Top = 8
+        Width = 409
+        Caption = 'Inbound connection'
+        ClientHeight = 61
+        ClientWidth = 405
+        TabOrder = 0
+        object CheckBoxEnableHTTPProxy: TCheckBox
+          Left = 8
+          Height = 19
+          Top = 29
+          Width = 120
+          Caption = 'Enable HTTP proxy'
+          OnEditingDone = CheckBoxEnableHTTPProxyEditingDone
+          TabOrder = 0
+        end
+        object SpinEditSocksPort: TSpinEdit
+          Left = 256
+          Height = 23
+          Top = 0
+          Width = 82
+          MaxValue = 65535
+          MinValue = 1
+          TabOrder = 1
+          Value = 1
+        end
+        object LabelSocksPort: TLabel
+          Left = 192
+          Height = 15
+          Top = 4
+          Width = 58
+          Caption = 'Socks port:'
+          ParentColor = False
+        end
+        object CheckBoxEnableSocksProxy: TCheckBox
+          Left = 8
+          Height = 19
+          Top = 0
+          Width = 119
+          Caption = 'Enable socks proxy'
+          OnEditingDone = CheckBoxEnableSocksProxyEditingDone
+          TabOrder = 2
+        end
+        object LabelHTTPPort: TLabel
+          Left = 193
+          Height = 15
+          Top = 33
+          Width = 58
+          Caption = 'HTTP port:'
+          ParentColor = False
+        end
+        object SpinEditHTTPPort: TSpinEdit
+          Left = 256
+          Height = 23
+          Top = 29
+          Width = 82
+          MaxValue = 65535
+          MinValue = 1
+          TabOrder = 3
+          Value = 1
+        end
+      end
+      object GroupBoxV2rayConfig: TGroupBox
+        Left = 8
+        Height = 105
+        Top = 96
+        Width = 408
+        Caption = 'V2ray config'
+        ClientHeight = 85
+        ClientWidth = 404
+        TabOrder = 1
+        object LabelV2RayBinaryPath: TLabel
+          Left = 8
+          Height = 15
+          Top = 4
+          Width = 95
+          Caption = 'V2ray binary path:'
+          ParentColor = False
+        end
+        object EditV2rayPath: TEdit
+          Left = 120
+          Height = 23
+          Top = 0
+          Width = 248
+          Anchors = [akTop, akLeft, akRight]
+          TabOrder = 0
+        end
+        object ButtonFindV2rayBinary: TButton
+          Left = 368
+          Height = 25
+          Top = -2
+          Width = 24
+          Anchors = [akTop, akRight]
+          Caption = '...'
+          OnClick = ButtonFindV2rayBinaryClick
+          TabOrder = 1
+        end
+        object LabelV2rayAssetsPath: TLabel
+          Left = 8
+          Height = 15
+          Top = 28
+          Width = 93
+          Caption = 'V2ray assets path:'
+          ParentColor = False
+        end
+        object EditV2rayAssetsPath: TEdit
+          Left = 120
+          Height = 23
+          Top = 24
+          Width = 248
+          Anchors = [akTop, akLeft, akRight]
+          TabOrder = 2
+        end
+        object ButtonFindV2rayAssets: TButton
+          Left = 368
+          Height = 25
+          Top = 24
+          Width = 24
+          Anchors = [akTop, akRight]
+          Caption = '...'
+          OnClick = ButtonFindV2rayAssetsClick
+          TabOrder = 3
+        end
+        object LabelLogLevel: TLabel
+          Left = 8
+          Height = 15
+          Top = 52
+          Width = 50
+          Caption = 'Log level:'
+          ParentColor = False
+        end
+        object ComboBoxLogLevel: TComboBox
+          Left = 280
+          Height = 23
+          Top = 48
+          Width = 88
+          Anchors = [akTop, akRight]
+          ItemHeight = 15
+          ItemIndex = 3
+          Items.Strings = (
+            'Debug'
+            'Info'
+            'Warning'
+            'Error'
+            'None'
+          )
+          Style = csDropDownList
+          TabOrder = 4
+          Text = 'Error'
+        end
+      end
+    end
+    object TabSheetRouteSettings: TTabSheet
+      Caption = 'Routes'
+      ClientHeight = 220
+      ClientWidth = 427
+      object TabControlRouteSetting: TTabControl
+        Left = 0
+        Height = 216
+        Top = 0
+        Width = 424
+        OnChange = TabControlRouteSettingChange
+        TabIndex = 0
+        Tabs.Strings = (
+          'Direct'
+          'Proxy'
+          'Deny'
+        )
+        TabOrder = 0
+        object MemoRuleList: TMemo
+          Left = 8
+          Height = 176
+          Top = 32
+          Width = 344
+          TabOrder = 1
+        end
+        object ButtonRouteClear: TButton
+          Left = 360
+          Height = 25
+          Top = 32
+          Width = 56
+          Caption = 'Clear'
+          OnClick = ButtonRouteClearClick
+          TabOrder = 2
+        end
+        object ButtonRouteRestore: TButton
+          Left = 360
+          Height = 25
+          Top = 64
+          Width = 56
+          Caption = 'Restore'
+          OnClick = ButtonRouteRestoreClick
+          TabOrder = 3
+        end
+        object ButtonRouteSave: TButton
+          Left = 360
+          Height = 25
+          Top = 183
+          Width = 56
+          Caption = 'Save'
+          OnClick = ButtonRouteSaveClick
+          TabOrder = 4
+        end
+      end
+    end
+    object TabSheetMisc: TTabSheet
+      Caption = 'Misc'
+      ClientHeight = 220
+      ClientWidth = 427
+      object GroupBoxKCPSettings: TGroupBox
+        Left = 0
+        Height = 216
+        Top = 0
+        Width = 185
+        Caption = 'Default KCP'
+        ClientHeight = 196
+        ClientWidth = 181
+        TabOrder = 0
+        object LabelKCPMTU: TLabel
+          Left = 8
+          Height = 15
+          Top = 4
+          Width = 29
+          Caption = 'MTU:'
+          ParentColor = False
+        end
+        object SpinEditKCPMTU: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 0
+          Width = 50
+          MaxValue = 1460
+          MinValue = 576
+          TabOrder = 0
+          Value = 576
+        end
+        object SpinEditKCPTTI: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 24
+          Width = 50
+          MinValue = 10
+          TabOrder = 1
+          Value = 10
+        end
+        object SpinEditUplinkCapacity: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 48
+          Width = 50
+          MaxValue = 65535
+          TabOrder = 2
+        end
+        object SpinEditDownlinkCapacity: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 72
+          Width = 50
+          MaxValue = 65535
+          TabOrder = 3
+        end
+        object SpinEditReadBufferSize: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 96
+          Width = 50
+          MaxValue = 255
+          TabOrder = 4
+        end
+        object SpinEditWriteBufferSize: TSpinEdit
+          Left = 120
+          Height = 23
+          Top = 120
+          Width = 50
+          MaxValue = 255
+          TabOrder = 5
+        end
+        object CheckBoxCongestion: TCheckBox
+          Left = 8
+          Height = 19
+          Top = 146
+          Width = 81
+          Caption = 'Congestion'
+          TabOrder = 6
+        end
+        object LabelKCPTTI: TLabel
+          Left = 8
+          Height = 15
+          Top = 28
+          Width = 20
+          Caption = 'TTI:'
+          ParentColor = False
+        end
+        object LabelUplinkCapacity: TLabel
+          Left = 8
+          Height = 15
+          Top = 52
+          Width = 83
+          Caption = 'UplinkCapacity:'
+          ParentColor = False
+        end
+        object LabelDownlinkCapacity: TLabel
+          Left = 8
+          Height = 15
+          Top = 76
+          Width = 99
+          Caption = 'DownlinkCapacity:'
+          ParentColor = False
+        end
+        object LabelReadBufferSize: TLabel
+          Left = 8
+          Height = 15
+          Top = 100
+          Width = 81
+          Caption = 'ReadBufferSize:'
+          ParentColor = False
+        end
+        object LabelWriteBufferSize: TLabel
+          Left = 8
+          Height = 15
+          Top = 124
+          Width = 83
+          Caption = 'WriteBufferSize:'
+          ParentColor = False
+        end
+        object LabelKCPHeader: TLabel
+          Left = 8
+          Height = 15
+          Top = 172
+          Width = 41
+          Caption = 'Header:'
+          ParentColor = False
+        end
+        object ComboBoxKCPHeaderType: TComboBox
+          Left = 72
+          Height = 23
+          Top = 168
+          Width = 100
+          ItemHeight = 15
+          ItemIndex = 0
+          Items.Strings = (
+            'none'
+            'srtp'
+            'utp'
+            'dtls'
+            'wechat-video'
+            'wireguard'
+          )
+          Style = csDropDownList
+          TabOrder = 7
+          Text = 'none'
+        end
+      end
+      object GroupBoxDNSServers: TGroupBox
+        Left = 200
+        Height = 49
+        Top = 0
+        Width = 225
+        Caption = 'Remote DNS'
+        ClientHeight = 29
+        ClientWidth = 221
+        TabOrder = 1
+        object EditDnsServers: TEdit
+          Left = 8
+          Height = 23
+          Top = 0
+          Width = 200
+          TabOrder = 0
+        end
+      end
+      object ComboBoxDomainStrategy: TComboBox
+        Left = 312
+        Height = 23
+        Top = 56
+        Width = 100
+        DropDownCount = 3
+        ItemHeight = 15
+        ItemIndex = 1
+        Items.Strings = (
+          'AsIs'
+          'IPIfNonMatch'
+          'IPOnDemand'
+        )
+        Style = csDropDownList
+        TabOrder = 2
+        Text = 'IPIfNonMatch'
+      end
+      object LabelDomainStrategy: TLabel
+        Left = 200
+        Height = 15
+        Top = 60
+        Width = 91
+        Caption = 'Domain Strategy:'
+        ParentColor = False
+      end
+    end
+  end
+  object ButtonSaveConfigs: TButton
+    Left = 264
+    Height = 25
+    Top = 264
+    Width = 75
+    Caption = 'Save'
+    OnClick = ButtonSaveConfigsClick
+    TabOrder = 1
+  end
+  object ButtonCancel: TButton
+    Left = 360
+    Height = 25
+    Top = 264
+    Width = 75
+    Caption = 'Cancel'
+    OnClick = ButtonCancelClick
+    TabOrder = 2
+  end
+  object OpenDialogFindV2rayBinary: TOpenDialog
+    Filter = 'V2ray binary|v2ray.exe|Executable file|*.exe'
+    left = 8
+    top = 272
+  end
+  object SelectDirectoryDialogFindV2rayAssets: TSelectDirectoryDialog
+    left = 40
+    top = 272
+  end
+end

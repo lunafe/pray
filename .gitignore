@@ -1,0 +1,7 @@
+Assets
+backup
+lib
+*.exe
+*.res
+*.lps
+*.json

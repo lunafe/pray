@@ -1,0 +1,29 @@
+dist: bionic
+language: c
+
+before_script:
+  - export HOME=`pwd`
+  - mkdir cache || true
+  - cd cache
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.6/fpc-src_3.0.4-2_amd64.deb
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.6/fpc-laz_3.0.4-1_amd64.deb
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.6/lazarus-project_2.0.6-0_amd64.deb
+  - sudo dpkg -i fpc-laz_3.0.4-1_amd64.deb
+  - sudo dpkg -i fpc-src_3.0.4-2_amd64.deb
+  - sudo dpkg -i lazarus-project_2.0.6-0_amd64.deb
+  - sudo apt-get update
+  - sudo apt-get install --no-install-recommends -y -f
+  - cd /usr/share/fpcsrc/3.0.4
+  - sudo make clean all OS_TARGET=win32 CPU_TARGET=i386
+  - sudo make crossinstall OS_TARGET=win32 CPU_TARGET=i386 INSTALL_PREFIX=/usr
+  - sudo ln -sf /usr/lib/fpc/3.0.4/ppcross386 /usr/bin/ppcross386
+  - cd $HOME
+
+jobs:
+  include:
+    - stage: Build
+      name: Cross build Pray for win32
+      script:
+        - /usr/bin/lazbuild --os=win32 --cpu=i386 --bm=Release --compiler=/usr/bin/ppcross386 Pray.lpi
+        - ls -hl Pray.exe
+        - file Pray.exe
