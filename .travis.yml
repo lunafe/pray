@@ -3,6 +3,7 @@ language: c
 
 before_script:
   - export HOME=`pwd`
+  - GITVER=$(git describe --tags || git rev-parse --short HEAD)
   - mkdir cache || true
   - cd cache
   - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.6/fpc-src_3.0.4-2_amd64.deb
@@ -19,11 +20,17 @@ before_script:
   - sudo ln -sf /usr/lib/fpc/3.0.4/ppcross386 /usr/bin/ppcross386
   - cd $HOME
 
+after_script:
+  - mkdir artifacts || true
+  - mv Pray.exe artifacts/
+  - cd artifacts
+  - zip pray-ci-aritfacts.zip Pray.exe
+  - curl -T pray-ci-aritfacts.zip https://transfer.sh/pray-ci-aritfacts-$GITVER.zip
+
+
 jobs:
   include:
     - stage: Build
       name: Cross build Pray for win32
       script:
         - /usr/bin/lazbuild --os=win32 --cpu=i386 --bm=Release --compiler=/usr/bin/ppcross386 Pray.lpi
-        - ls -hl Pray.exe
-        - file Pray.exe

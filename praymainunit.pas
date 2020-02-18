@@ -99,8 +99,8 @@ begin
     Inc(LineNum)
   else
     PrayMainWindow.MemoV2rayOutput.Lines.Delete(0);
-  PrayMainWindow.MemoV2rayOutput.Lines.Add(Content.Trim);
   PrayMainWindow.MemoV2rayOutput.SelStart := Length(PrayMainWindow.MemoV2rayOutput.Text);
+  PrayMainWindow.MemoV2rayOutput.Lines.Add(Content.Trim);
 end;
 
 procedure TV2rayWatchThread.ProcessStoped;

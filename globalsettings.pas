@@ -19,6 +19,7 @@ type
     ButtonCancel: TButton;
     ButtonSaveConfigs: TButton;
     ButtonFindV2rayBinary: TButton;
+    CheckBoxEnableMux: TCheckBox;
     CheckBoxCongestion: TCheckBox;
     CheckBoxEnableHTTPProxy: TCheckBox;
     CheckBoxEnableSocksProxy: TCheckBox;
@@ -28,10 +29,12 @@ type
     EditV2rayAssetsPath: TEdit;
     EditDnsServers: TEdit;
     EditV2rayPath: TEdit;
+    GroupBoxMux: TGroupBox;
     GroupBoxDNSServers: TGroupBox;
     GroupBoxKCPSettings: TGroupBox;
     GroupBoxV2rayConfig: TGroupBox;
     GroupBoxInbound: TGroupBox;
+    LabelMuxConcurrency: TLabel;
     LabelLogLevel: TLabel;
     LabelKCPHeader: TLabel;
     LabelV2rayAssetsPath: TLabel;
@@ -49,6 +52,7 @@ type
     OpenDialogFindV2rayBinary: TOpenDialog;
     PageControlGlobalSettings: TPageControl;
     SelectDirectoryDialogFindV2rayAssets: TSelectDirectoryDialog;
+    SpinEditMuxConcurrency: TSpinEdit;
     SpinEditWriteBufferSize: TSpinEdit;
     SpinEditReadBufferSize: TSpinEdit;
     SpinEditDownlinkCapacity: TSpinEdit;
@@ -69,6 +73,7 @@ type
     procedure ButtonRouteSaveClick(Sender: TObject);
     procedure ButtonSaveConfigsClick(Sender: TObject);
     procedure CheckBoxEnableHTTPProxyEditingDone(Sender: TObject);
+    procedure CheckBoxEnableMuxEditingDone(Sender: TObject);
     procedure CheckBoxEnableSocksProxyEditingDone(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -140,6 +145,11 @@ begin
   SpinEditHTTPPort.Enabled := CheckBoxEnableHTTPProxy.Checked;
 end;
 
+procedure TFormGlobalSettings.CheckBoxEnableMuxEditingDone(Sender: TObject);
+begin
+  SpinEditMuxConcurrency.Enabled := CheckBoxEnableMux.Checked;
+end;
+
 procedure TFormGlobalSettings.CheckBoxEnableSocksProxyEditingDone(Sender: TObject);
 begin
   SpinEditSocksPort.Enabled := CheckBoxEnableSocksProxy.Checked;
@@ -180,8 +190,11 @@ begin
   ComboBoxKCPHeaderType.ItemIndex := integer(Settings.KCPHeaderType);
   EditDnsServers.Text := Settings.DNSServers;
   ComboBoxDomainStrategy.ItemIndex := integer(Settings.DomainStrategy);
+  CheckBoxEnableMux.Checked := Settings.MuxEnabled;
+  SpinEditMuxConcurrency.Value := Settings.MuxConcurrency;
   CheckBoxEnableHTTPProxyEditingDone(nil);
   CheckBoxEnableSocksProxyEditingDone(nil);
+  CheckBoxEnableMuxEditingDone(nil);
   PageControlGlobalSettings.ActivePageIndex := 0;
   MemoRuleList.Text := RouteListDirect;
 end;
@@ -225,6 +238,8 @@ begin
     Settings.KCPHeaderType := TKCPHeaderType(ComboBoxKCPHeaderType.ItemIndex);
     Settings.DNSServers := EditDnsServers.Text;
     Settings.DomainStrategy := TRouteDomainStrategy(ComboBoxDomainStrategy.ItemIndex);
+    Settings.MuxEnabled := CheckBoxEnableMux.Checked;
+    Settings.MuxConcurrency := SpinEditMuxConcurrency.Value;
     Result := True;
   end;
 end;

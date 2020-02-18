@@ -26,6 +26,8 @@ type
     KCPCongestionAlgorithm: boolean;
     KCPHeaderType: TKCPHeaderType;
     DomainStrategy: TRouteDomainStrategy;
+    MuxEnabled: boolean;
+    MuxConcurrency: word;
     Routes: array [1..3] of string;
     constructor Create;
     procedure LoadFile(FileName: string);
@@ -55,6 +57,8 @@ begin
   KCPCongestionAlgorithm := False;
   KCPHeaderType := khNONE;
   DomainStrategy := dsNONMATCH;
+  MuxEnabled := False;
+  MuxConcurrency := 16;
   Routes[1] := 'geosite:cn,geoip:cn,geoip:private';
   Routes[2] := '';
   Routes[3] := '';
@@ -87,6 +91,8 @@ begin
   KCPCongestionAlgorithm := J.Get('congestion', KCPCongestionAlgorithm);
   KCPHeaderType := TKCPHeaderType(J.Get('khead', byte(KCPHeaderType)));
   DomainStrategy := TRouteDomainStrategy(J.Get('domstg', byte(DomainStrategy)));
+  MuxEnabled := J.Get('mux', MuxEnabled);
+  MuxConcurrency := J.Get('muxcon', MuxConcurrency);
   R := J.Get('route', TJSONArray.Create(['', '', '']));
   Routes[1] := R[0].AsString;
   Routes[2] := R[1].AsString;
@@ -101,13 +107,13 @@ begin
   F := TFileStream.Create(FileName, fmCreate);
   J := TJSONObject.Create(['socks', EnableSocksProxy, 'http',
     EnableHTTPProxy, 'socks_port', SocksProxyPort, 'http_port',
-    HTTPProxyPort, 'v2ray', V2rayBinaryPath, 'assets',
-    V2rayAssetsPath, 'log', byte(V2rayLogLevel), 'dns', DNSServers,
-    'mtu', KCPMTU, 'tti', KCPTTI, 'upcap', KCPUplinkCapacity, 'downcap',
-    KCPDownlinkCapacity, 'rbsize', KCPReadBufferSize, 'wbsize',
-    KCPWriteBufferSize, 'congestion', KCPCongestionAlgorithm, 'khead',
-    byte(KCPHeaderType), 'domstg', byte(DomainStrategy), 'route',
-    TJSONArray.Create([Routes[1], Routes[2], Routes[3]])]).FormatJSON;
+    HTTPProxyPort, 'v2ray', V2rayBinaryPath, 'assets', V2rayAssetsPath,
+    'log', byte(V2rayLogLevel), 'dns', DNSServers, 'mtu', KCPMTU,
+    'tti', KCPTTI, 'upcap', KCPUplinkCapacity, 'downcap', KCPDownlinkCapacity,
+    'rbsize', KCPReadBufferSize, 'wbsize', KCPWriteBufferSize,
+    'congestion', KCPCongestionAlgorithm, 'khead', byte(KCPHeaderType),
+    'domstg', byte(DomainStrategy), 'mux', MuxEnabled, 'muxcon',
+    MuxConcurrency, 'route', TJSONArray.Create([Routes[1], Routes[2], Routes[3]])]).FormatJSON;
   F.WriteBuffer(Pointer(J)^, Length(J));
   F.Free;
 end;

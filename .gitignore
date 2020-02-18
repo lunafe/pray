@@ -2,6 +2,8 @@ Assets
 backup
 lib
 *.exe
+*.dbg
+*.obj
 *.res
 *.lps
 *.json

@@ -2,4 +2,8 @@
 
 ### TODO:
 
-- Update README.
+- TLS Support;
+- Vmess:// URL Support;
+- Import and export;
+- Subscription support;
+- Update README;

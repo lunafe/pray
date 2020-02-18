@@ -15,14 +15,14 @@ object FormGlobalSettings: TFormGlobalSettings
     Left = 8
     Height = 248
     Top = 8
-    Width = 435
+    Width = 440
     ActivePage = TabSheetGeneralSettings
     TabIndex = 0
     TabOrder = 0
     object TabSheetGeneralSettings: TTabSheet
       Caption = 'General'
       ClientHeight = 220
-      ClientWidth = 427
+      ClientWidth = 432
       object GroupBoxInbound: TGroupBox
         Left = 8
         Height = 81
@@ -233,7 +233,7 @@ object FormGlobalSettings: TFormGlobalSettings
     object TabSheetMisc: TTabSheet
       Caption = 'Misc'
       ClientHeight = 220
-      ClientWidth = 427
+      ClientWidth = 432
       object GroupBoxKCPSettings: TGroupBox
         Left = 0
         Height = 216
@@ -380,45 +380,84 @@ object FormGlobalSettings: TFormGlobalSettings
       end
       object GroupBoxDNSServers: TGroupBox
         Left = 200
-        Height = 49
+        Height = 72
         Top = 0
         Width = 225
         Caption = 'Remote DNS'
-        ClientHeight = 29
+        ClientHeight = 52
         ClientWidth = 221
         TabOrder = 1
         object EditDnsServers: TEdit
           Left = 8
           Height = 23
           Top = 0
-          Width = 200
+          Width = 208
           TabOrder = 0
         end
+        object LabelDomainStrategy: TLabel
+          Left = 8
+          Height = 15
+          Top = 28
+          Width = 91
+          Caption = 'Domain Strategy:'
+          ParentColor = False
+        end
+        object ComboBoxDomainStrategy: TComboBox
+          Left = 116
+          Height = 23
+          Top = 24
+          Width = 100
+          DropDownCount = 3
+          ItemHeight = 15
+          ItemIndex = 1
+          Items.Strings = (
+            'AsIs'
+            'IPIfNonMatch'
+            'IPOnDemand'
+          )
+          Style = csDropDownList
+          TabOrder = 1
+          Text = 'IPIfNonMatch'
+        end
       end
-      object ComboBoxDomainStrategy: TComboBox
-        Left = 312
-        Height = 23
-        Top = 56
-        Width = 100
-        DropDownCount = 3
-        ItemHeight = 15
-        ItemIndex = 1
-        Items.Strings = (
-          'AsIs'
-          'IPIfNonMatch'
-          'IPOnDemand'
-        )
-        Style = csDropDownList
-        TabOrder = 2
-        Text = 'IPIfNonMatch'
-      end
-      object LabelDomainStrategy: TLabel
+      object GroupBoxMux: TGroupBox
         Left = 200
-        Height = 15
-        Top = 60
-        Width = 91
-        Caption = 'Domain Strategy:'
-        ParentColor = False
+        Height = 48
+        Top = 72
+        Width = 225
+        Caption = 'Mux'
+        ClientHeight = 28
+        ClientWidth = 221
+        TabOrder = 2
+        object CheckBoxEnableMux: TCheckBox
+          Left = 7
+          Height = 19
+          Top = 2
+          Width = 55
+          Caption = 'Enable'
+          OnEditingDone = CheckBoxEnableMuxEditingDone
+          TabOrder = 0
+        end
+        object SpinEditMuxConcurrency: TSpinEdit
+          Left = 166
+          Height = 23
+          Top = 0
+          Width = 50
+          Anchors = [akTop, akRight]
+          MaxValue = 256
+          MinValue = 1
+          TabOrder = 1
+          Value = 1
+        end
+        object LabelMuxConcurrency: TLabel
+          Left = 88
+          Height = 15
+          Top = 4
+          Width = 71
+          Anchors = [akTop, akRight]
+          Caption = 'Concurrency:'
+          ParentColor = False
+        end
       end
     end
   end

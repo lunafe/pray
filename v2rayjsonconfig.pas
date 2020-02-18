@@ -35,6 +35,8 @@ type
     KCPReadBufferSize: byte;
     KCPWriteBufferSize: byte;
     KCPCongestionAlgorithm: boolean;
+    MuxEnabled: boolean;
+    MuxConcurrency: word;
     constructor Create(Address: string; Port: word);
     procedure SetLogLevel(Level: TV2rayLogLevel);
     procedure SetUser(ID: string; Alter: word);
@@ -45,6 +47,7 @@ type
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
     procedure SetSocksProxy(Port: word);
     procedure SetHTTPProxy(Port: word);
+    procedure SetDNSServers(ServerListString: string);
     function ToJSON: TJSONObject;
   protected
     LogLevel: string;
@@ -58,7 +61,9 @@ type
     RouteProxyIPList: TStrings;
     RouteDenyIPList: TStrings;
     RouteDenyDomainList: TStrings;
+    DNSServers: TStrings;
     function GenerateRouteJSON: TJSONArray;
+    function GenerateDNSServerJSON: TJSONArray;
   end;
 
 function CommaStringList(CommaStr: string): TStrings;
@@ -107,6 +112,7 @@ begin
   RouteProxyIPList := TStringList.Create;
   RouteDenyDomainList := TStringList.Create;
   RouteDenyIPList := TStringList.Create;
+  DNSServers := TStringList.Create;
 end;
 
 procedure TV2rayJsonConfig.SetLogLevel(Level: TV2rayLogLevel);
@@ -247,6 +253,20 @@ begin
     EnableLocalHTTPProxy := False;
 end;
 
+procedure TV2rayJsonConfig.SetDNSServers(ServerListString: string);
+begin
+  DNSServers := CommaStringList(ServerListString);
+end;
+
+function TV2rayJsonConfig.GenerateDNSServerJSON: TJSONArray;
+var
+  S: string;
+begin
+  Result := TJSONArray.Create;
+  for S in DNSServers do
+    Result.Add(S);
+end;
+
 function TV2rayJsonConfig.GenerateRouteJSON: TJSONArray;
 var
   L: TJSONArray;
@@ -258,21 +278,24 @@ begin
     L := TJSONArray.Create;
     for X in RouteDirectDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'direct', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
+      'direct', 'domain', L]));
   end;
   if RouteProxyDomainList.Count <> 0 then
   begin
     L := TJSONArray.Create;
     for X in RouteProxyDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'proxy', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
+      'proxy', 'domain', L]));
   end;
   if RouteDenyDomainList.Count <> 0 then
   begin
     L := TJSONArray.Create;
     for X in RouteDenyDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'deny', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
+      'deny', 'domain', L]));
   end;
   if RouteDirectIPList.Count <> 0 then
   begin
@@ -310,36 +333,32 @@ begin
     TLSStr := 'none';
   if EnableLocalHTTPProxy then
     InboundList.Add(TJSONObject.Create(
-      ['port', LocalHTTPProxyPort, 'listen', '127.0.0.1', 'protocol', 'http',
-      'settings', TJSONObject.Create]));
+      ['port', LocalHTTPProxyPort, 'listen', '127.0.0.1', 'protocol',
+      'http', 'settings', TJSONObject.Create]));
   if EnableLocalSocksProxy then
     InboundList.Add(TJSONObject.Create(
-      ['port', LocalSocksProxyPort, 'listen', '127.0.0.1', 'protocol', 'socks',
-      'settings', TJSONObject.Create(['udp', EnableLocalSocksUDP])]));
-  OutboundProxy := TJSONObject.Create(['tag', 'proxy', 'protocol', 'vmess', 'settings',
-    TJSONObject.Create(['vnext', TJSONArray.Create(
-    [TJSONObject.Create(['address', RemoteAddr, 'port', RemotePort,
-    'users', TJSONArray.Create([TJSONObject.Create(
-    ['id', VMessUserID, 'level', 0, 'alterId', VMessUserAlterID])])])])]),
-    'streamSettings', TJSONObject.Create(
-    ['network', NetworkTransport, 'security', TLSStr,
-    'tlsSettings', TJSONObject.Create(
-    ['serverName', TLSServerName, 'allowInsecure', True]),
-    'wsSettings', TJSONObject.Create(
-    ['path', RemotePath, 'headers', TJSONObject.Create(['Host', RemoteHostname])]),
-    'kcpSettings', TJSONObject.Create(
-    ['header', TJSONObject.Create(['type', KCPHeaderType]),
+      ['port', LocalSocksProxyPort, 'listen', '127.0.0.1', 'protocol',
+      'socks', 'settings', TJSONObject.Create(['udp', EnableLocalSocksUDP])]));
+  OutboundProxy := TJSONObject.Create(['tag', 'proxy', 'protocol', 'vmess',
+    'settings', TJSONObject.Create(['vnext', TJSONArray.Create(
+    [TJSONObject.Create(['address', RemoteAddr, 'port', RemotePort, 'users',
+    TJSONArray.Create([TJSONObject.Create(['id', VMessUserID, 'level',
+    0, 'alterId', VMessUserAlterID])])])])]), 'mux',
+    TJSONObject.Create(['enabled', MuxEnabled, 'concurrency', MuxConcurrency]),
+    'streamSettings', TJSONObject.Create(['network', NetworkTransport,
+    'security', TLSStr, 'tlsSettings', TJSONObject.Create(
+    ['serverName', TLSServerName, 'allowInsecure', True]), 'wsSettings',
+    TJSONObject.Create(['path', RemotePath, 'headers',
+    TJSONObject.Create(['Host', RemoteHostname])]), 'kcpSettings',
+    TJSONObject.Create(['header', TJSONObject.Create(['type', KCPHeaderType]),
     'congestion', KCPCongestionAlgorithm, 'mtu', KCPMTU, 'tti', KCPTTI,
     'readBufferSize', KCPReadBufferSize, 'writeBufferSize', KCPWriteBufferSize,
-    'uplinkCapacity', KCPUplinkCapacity, 'downlinkCapacity',
-    KCPDownlinkCapacity])])]);
+    'uplinkCapacity', KCPUplinkCapacity, 'downlinkCapacity', KCPDownlinkCapacity])])]);
   Result := TJSONObject.Create(['log', TJSONObject.Create(['loglevel', LogLevel]),
-    'dns', TJSONObject.Create(
-    ['servers', TJSONArray.Create(['208.67.222.222', '208.67.220.220'])]),
-    'routing', TJSONObject.Create(
-    ['domainStrategy', DomainStrategy, 'rules', GenerateRouteJSON]),
-    'inbounds', InboundList, 'outbounds',
-    TJSONArray.Create([OutboundProxy, TJSONObject.Create(
+    'dns', TJSONObject.Create(['servers', GenerateDNSServerJSON]), 'routing',
+    TJSONObject.Create(['domainStrategy', DomainStrategy, 'rules', GenerateRouteJSON]),
+    'inbounds', InboundList, 'outbounds', TJSONArray.Create(
+    [OutboundProxy, TJSONObject.Create(
     ['tag', 'direct', 'protocol', 'freedom', 'settings', TJSONObject.Create]),
     TJSONObject.Create(['tag', 'deny', 'protocol', 'blackhole', 'settings',
     TJSONObject.Create])])]);
