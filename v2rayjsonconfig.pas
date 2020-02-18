@@ -150,8 +150,8 @@ begin
   begin
     RemoteHostname := Hostname;
     I := RemoteHostname.IndexOf(':');
-    if I <> -1 then
-      TLSServerName := RemoteHostname.Substring(0, I);
+    if I <> -1 then TLSServerName := RemoteHostname.Substring(0, I)
+    else TLSServerName := Hostname;
   end;
   RemotePath := Path;
 end;

@@ -24,8 +24,8 @@ after_script:
   - mkdir artifacts
   - mv Pray.exe artifacts/
   - cd artifacts
-  - zip pray-ci-aritfacts.zip Pray.exe
-  - curl -T pray-ci-aritfacts.zip https://transfer.sh/pray-ci-aritfacts-$GITVER.zip && echo || true
+  - zip pray-ci-artifacts.zip Pray.exe
+  - curl -T pray-ci-artifacts.zip https://transfer.sh/pray-ci-artifacts-$GITVER.zip && echo || true
 
 
 jobs:
