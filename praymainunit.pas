@@ -107,7 +107,8 @@ end;
 procedure TV2rayWatchThread.ProcessStoped;
 begin
   PrayMainWindow.MemoV2rayOutput.Lines.Add('! v2ray process stoped.');
-  PrayMainWindow.BitBtnDisconnectClick(nil);
+  PrayMainWindow.StatusBarConnectionStatus.SimpleText := 'Disconnected';
+  Terminate;
 end;
 
 {$R *.lfm}
@@ -119,10 +120,13 @@ begin
   P := TProfile.Create;
   FormEditProfile.ApplyProfile(P);
   FormEditProfile.ShowModal;
-  ProfileList.Add(P);
-  ListBoxProfiles.Items.Add(P.Name);
-  ListBoxProfilesSelectionChange(nil, False);
-  SaveProfiles;
+  if FormEditProfile.SaveAfterExit then
+  begin
+    ProfileList.Add(P);
+    ListBoxProfiles.Items.Add(P.Name);
+    ListBoxProfilesSelectionChange(nil, False);
+    SaveProfiles;
+  end;
 end;
 
 procedure TPrayMainWindow.BitBtnConnectClick(Sender: TObject);
@@ -185,9 +189,12 @@ begin
     P := TProfile(ProfileList[ListBoxProfiles.ItemIndex]);
     FormEditProfile.ApplyProfile(P);
     FormEditProfile.ShowModal;
-    ListBoxProfiles.Items[ListBoxProfiles.ItemIndex] := P.Name;
-    ListBoxProfilesSelectionChange(nil, False);
-    SaveProfiles;
+    if FormEditProfile.SaveAfterExit then
+    begin
+      ListBoxProfiles.Items[ListBoxProfiles.ItemIndex] := P.Name;
+      ListBoxProfilesSelectionChange(nil, False);
+      SaveProfiles;
+    end;
   end;
 end;
 

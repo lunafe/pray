@@ -37,6 +37,8 @@ type
     procedure ButtonSaveClick(Sender: TObject);
     procedure ApplyProfile(Profile: TProfile);
     procedure ComboBoxNetworkChange(Sender: TObject);
+  public
+    SaveAfterExit: boolean;
   private
     ProfileObj: TProfile;
   end;
@@ -61,6 +63,7 @@ begin
   ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
   ProfileObj.Path := EditPath.Text;
+  SaveAfterExit := True;
   FormEditProfile.Close;
 end;
 
@@ -76,6 +79,7 @@ begin
   EditHostname.Text := Profile.Hostname;
   EditPath.Text := Profile.Path;
   ProfileObj := Profile;
+  SaveAfterExit := False;
 end;
 
 procedure TFormEditProfile.ComboBoxNetworkChange(Sender: TObject);

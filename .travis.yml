@@ -22,9 +22,9 @@ before_script:
 
 after_script:
   - mkdir artifacts
-  - mv Pray.exe artifacts/
+  - mv Pray-release.exe artifacts/
   - cd artifacts
-  - zip pray-ci-artifacts.zip Pray.exe
+  - zip pray-ci-artifacts.zip Pray-release.exe
   - curl -T pray-ci-artifacts.zip https://transfer.sh/pray-ci-artifacts-$GITVER.zip && echo || true
 
 
