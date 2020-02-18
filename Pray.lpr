@@ -7,7 +7,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, SysUtils, PrayMainUnit, Config, GlobalSettings, V2rayJsonConfig, ProfileEditor,
+  Forms, SysUtils, PrayMainUnit, GlobalSettings, V2rayJsonConfig, ProfileEditor,
   ProgramSettings, Profile;
 
 {$R *.res}

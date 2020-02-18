@@ -10,7 +10,7 @@ before_script:
   - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.6/lazarus-project_2.0.6-0_amd64.deb
   - sudo dpkg -i fpc-laz_3.0.4-1_amd64.deb
   - sudo dpkg -i fpc-src_3.0.4-2_amd64.deb
-  - sudo dpkg -i lazarus-project_2.0.6-0_amd64.deb
+  - sudo dpkg -i lazarus-project_2.0.6-0_amd64.deb || true
   - sudo apt-get update
   - sudo apt-get install --no-install-recommends -y -f
   - cd /usr/share/fpcsrc/3.0.4
