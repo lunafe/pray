@@ -41,14 +41,14 @@ type
     constructor Create(Address: string; Port: word);
     procedure SetLogLevel(Level: TV2rayLogLevel);
     procedure SetUser(ID: string; Alter: word);
-    procedure SetTransport(Transport: TRemoteTransport; Hostname: string = '';
-      Path: string = '');
+    procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
     procedure SetUDPHeaderType(HeaderType: TUDPHeaderType);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
     procedure SetSocksProxy(Port: word);
     procedure SetHTTPProxy(Port: word);
     procedure SetDNSServers(ServerListString: string);
+    procedure SetHostPath(Hostname: string = ''; Path: string = '');
     procedure SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
     function ToJSON: TJSONObject;
   protected
@@ -68,6 +68,7 @@ type
     DNSServers: TStrings;
     function GenerateRouteJSON: TJSONArray;
     function GenerateDNSServerJSON: TJSONArray;
+    function GenerateStreamSettingsJSON: TJSONObject;
   end;
 
 function CommaStringList(CommaStr: string): TStrings;
@@ -98,6 +99,7 @@ begin
   EnableLocalSocksProxy := False;
   EnableLocalSocksUDP := True;
   RemoteHostname := Address;
+  RemotePath := '';
   LogLevel := 'debug';
   NetworkTransport := 'tcp';
   TLSServerName := '';
@@ -139,10 +141,7 @@ begin
   VMessUserAlterID := Alter;
 end;
 
-procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport;
-  Hostname: string = ''; Path: string = '');
-var
-  I: integer;
+procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
 begin
   case Transport of
     rtTCP: NetworkTransport := 'tcp';
@@ -153,7 +152,17 @@ begin
     else
       NetworkTransport := 'tcp';
   end;
-  if (Hostname <> '') and (Transport <> rtKCP) then
+  case Transport of
+    rtKCP, rtQUIC: EnableTLS := False;
+    else  EnableTLS := TLS;
+  end;
+end;
+
+procedure TV2rayJsonConfig.SetHostPath(Hostname: string = ''; Path: string = '');
+var
+  I: integer;
+begin
+  if Hostname <> '' then
   begin
     RemoteHostname := Hostname;
     I := RemoteHostname.IndexOf(':');
@@ -161,6 +170,18 @@ begin
     else TLSServerName := Hostname;
   end;
   RemotePath := Path;
+end;
+
+procedure TV2rayJsonConfig.SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
+begin
+  case Security of
+    qsNONE: QUICSecurity := 'none';
+    qsAES: QUICSecurity := 'aes-128-gcm';
+    qsCHACHA: QUICSecurity := 'chacha20-poly1305';
+    else QUICSecurity := 'none';
+  end;
+  if Security = qsNONE then QUICKey := ''
+  else QUICKey := Key;
 end;
 
 procedure TV2rayJsonConfig.SetUDPHeaderType(HeaderType: TUDPHeaderType);
@@ -265,17 +286,6 @@ begin
   DNSServers := CommaStringList(ServerListString);
 end;
 
-procedure TV2rayJsonConfig.SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
-begin
-  case Security of
-    qsNONE: QUICSecurity := 'none';
-    qsAES: QUICSecurity := 'aes-128-gcm';
-    qsCHACHA: QUICSecurity := 'chacha20-poly1305';
-    else QUICSecurity := 'none';
-  end;
-  if Security <> qsNONE then QUICKey := Key;
-end;
-
 function TV2rayJsonConfig.GenerateDNSServerJSON: TJSONArray;
 var
   S: string;
@@ -338,17 +348,46 @@ begin
   end;
 end;
 
-function TV2rayJsonConfig.ToJSON: TJSONObject;
-var
-  InboundList: TJSONArray;
-  OutboundProxy: TJSONObject;
-  TLSStr: string;
+function TV2rayJsonConfig.GenerateStreamSettingsJSON: TJSONObject;
+var TLSStr: string;
 begin
-  InboundList := TJSONArray.Create;
   if EnableTLS then
     TLSStr := 'tls'
   else
     TLSStr := 'none';
+  Result := TJSONObject.Create(['network', NetworkTransport, 'security', TLSStr]);
+  if TLSStr <> 'none' then
+    Result.Add('tlsSettings', TJSONObject.Create([
+      'serverName', TLSServerName,
+      'allowInsecure', True]));
+  case NetworkTransport of
+    'ws': Result.Add('wsSettings', TJSONObject.Create([
+      'path', RemotePath,
+      'headers', TJSONObject.Create(['Host', RemoteHostname])]));
+    'http': Result.Add('httpSettings', TJSONObject.Create([
+      'host', TJSONArray.Create([RemoteHostname]),
+      'path', RemotePath]));
+    'kcp': Result.Add('kcpSettings', TJSONObject.Create([
+      'header', TJSONObject.Create(['type', UDPHeaderType]),
+      'congestion', KCPCongestionAlgorithm,
+      'mtu', KCPMTU,
+      'tti', KCPTTI,
+      'readBufferSize', KCPReadBufferSize,
+      'writeBufferSize', KCPWriteBufferSize,
+      'uplinkCapacity', KCPUplinkCapacity,
+      'downlinkCapacity', KCPDownlinkCapacity]));
+    'quic': Result.Add('quicSettings', TJSONObject.Create([
+      'security', QUICSecurity,
+      'key', QUICKey,
+      'header', TJSONObject.Create(['type', UDPHeaderType])]));
+  end;
+end;
+
+function TV2rayJsonConfig.ToJSON: TJSONObject;
+var
+  InboundList: TJSONArray;
+begin
+  InboundList := TJSONArray.Create;
   if EnableLocalHTTPProxy then
     InboundList.Add(TJSONObject.Create([
       'port', LocalHTTPProxyPort,
@@ -362,47 +401,6 @@ begin
       'protocol', 'socks',
       'settings', TJSONObject.Create([
         'udp', EnableLocalSocksUDP])]));
-  OutboundProxy := TJSONObject.Create([
-    'tag', 'proxy',
-    'protocol', 'vmess',
-    'settings', TJSONObject.Create([
-       'vnext', TJSONArray.Create([
-         TJSONObject.Create([
-           'address', RemoteAddr,
-           'port', RemotePort,
-           'users', TJSONArray.Create([
-             TJSONObject.Create([
-               'id', VMessUserID,
-               'level', 0,
-               'alterId', VMessUserAlterID])])])])]),
-    'mux', TJSONObject.Create([
-      'enabled', MuxEnabled,
-      'concurrency', MuxConcurrency]),
-    'streamSettings', TJSONObject.Create([
-      'network', NetworkTransport,
-      'security', TLSStr,
-      'tlsSettings', TJSONObject.Create([
-        'serverName', TLSServerName,
-        'allowInsecure', True]),
-      'wsSettings', TJSONObject.Create([
-        'path', RemotePath,
-        'headers', TJSONObject.Create(['Host', RemoteHostname])]),
-      'httpSettings', TJSONObject.Create([
-        'host', TJSONArray.Create([RemoteHostname]),
-        'path', RemotePath]),
-      'kcpSettings', TJSONObject.Create([
-        'header', TJSONObject.Create(['type', UDPHeaderType]),
-        'congestion', KCPCongestionAlgorithm,
-        'mtu', KCPMTU,
-        'tti', KCPTTI,
-        'readBufferSize', KCPReadBufferSize,
-        'writeBufferSize', KCPWriteBufferSize,
-        'uplinkCapacity', KCPUplinkCapacity,
-        'downlinkCapacity', KCPDownlinkCapacity]),
-      'quicSettings', TJSONObject.Create([
-        'security', QUICSecurity,
-        'key', QUICKey,
-        'header', TJSONObject.Create(['type', UDPHeaderType])])])]);
   Result := TJSONObject.Create([
     'log', TJSONObject.Create(['loglevel', LogLevel]),
     'dns', TJSONObject.Create(['servers', GenerateDNSServerJSON]),
@@ -411,7 +409,23 @@ begin
       'rules', GenerateRouteJSON]),
     'inbounds', InboundList,
     'outbounds', TJSONArray.Create([
-      OutboundProxy,
+      TJSONObject.Create([
+        'tag', 'proxy',
+        'protocol', 'vmess',
+        'settings', TJSONObject.Create([
+           'vnext', TJSONArray.Create([
+           TJSONObject.Create([
+             'address', RemoteAddr,
+             'port', RemotePort,
+             'users', TJSONArray.Create([
+               TJSONObject.Create([
+                 'id', VMessUserID,
+                 'level', 0,
+                 'alterId', VMessUserAlterID])])])])]),
+        'mux', TJSONObject.Create([
+          'enabled', MuxEnabled,
+          'concurrency', MuxConcurrency]),
+        'streamSettings', GenerateStreamSettingsJSON]),
       TJSONObject.Create([
         'tag', 'direct',
         'protocol', 'freedom',

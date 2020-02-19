@@ -22,6 +22,7 @@ begin
   SettingsJsonPath := ConcatPaths([ApplicationRootDirectory, 'praysettings.json']);
   GeneratedJsonPath := ConcatPaths([TemporaryDirectory, 'praygenerate.json']);
   Application.Scaled:=True;
+  Application.Title:='Pray Client';
   Application.Initialize;
   Application.CreateForm(TPrayMainWindow, PrayMainWindow);
   Application.CreateForm(TFormGlobalSettings, FormGlobalSettings);

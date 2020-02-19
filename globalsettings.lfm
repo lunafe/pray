@@ -432,44 +432,6 @@ object FormGlobalSettings: TFormGlobalSettings
           ParentColor = False
         end
       end
-      object GroupBoxUDP: TGroupBox
-        Left = 200
-        Height = 49
-        Top = 120
-        Width = 225
-        Caption = 'UDP'
-        ClientHeight = 29
-        ClientWidth = 221
-        TabOrder = 3
-        object ComboBoxUDPHeaderType: TComboBox
-          Left = 116
-          Height = 23
-          Top = 0
-          Width = 100
-          Anchors = [akTop, akRight]
-          ItemHeight = 15
-          ItemIndex = 0
-          Items.Strings = (
-            'none'
-            'srtp'
-            'utp'
-            'dtls'
-            'wechat-video'
-            'wireguard'
-          )
-          Style = csDropDownList
-          TabOrder = 0
-          Text = 'none'
-        end
-        object LabelUDPHeaderType: TLabel
-          Left = 7
-          Height = 15
-          Top = 4
-          Width = 67
-          Caption = 'Header type:'
-          ParentColor = False
-        end
-      end
     end
   end
   object ButtonSaveConfigs: TButton

@@ -24,7 +24,6 @@ type
     KCPReadBufferSize: word;
     KCPWriteBufferSize: word;
     KCPCongestionAlgorithm: boolean;
-    UDPHeaderType: TUDPHeaderType;
     DomainStrategy: TRouteDomainStrategy;
     MuxEnabled: boolean;
     MuxConcurrency: word;
@@ -55,7 +54,6 @@ begin
   KCPReadBufferSize := 2;
   KCPWriteBufferSize := 2;
   KCPCongestionAlgorithm := False;
-  UDPHeaderType := uhNONE;
   DomainStrategy := dsNONMATCH;
   MuxEnabled := False;
   MuxConcurrency := 16;
@@ -82,15 +80,14 @@ begin
   HTTPProxyPort := J.Get('http_port', HTTPProxyPort);
   V2rayBinaryPath := J.Get('v2ray', V2rayBinaryPath);
   V2rayAssetsPath := J.Get('assets', V2rayAssetsPath);
-  V2rayLogLevel := TV2rayLogLevel(J.Get('log', byte(V2rayLogLevel)));
+  V2rayLogLevel := TV2rayLogLevel(J.Get('log', integer(V2rayLogLevel)));
   DNSServers := J.Get('dns', DNSServers);
   KCPMTU := J.Get('mtu', KCPMTU);
   KCPTTI := J.Get('tti', KCPTTI);
   KCPUplinkCapacity := J.Get('upcap', KCPUplinkCapacity);
   KCPDownlinkCapacity := J.Get('downcap', KCPDownlinkCapacity);
   KCPCongestionAlgorithm := J.Get('congestion', KCPCongestionAlgorithm);
-  UDPHeaderType := TUDPHeaderType(J.Get('khead', byte(UDPHeaderType)));
-  DomainStrategy := TRouteDomainStrategy(J.Get('domstg', byte(DomainStrategy)));
+  DomainStrategy := TRouteDomainStrategy(J.Get('domstg', integer(DomainStrategy)));
   MuxEnabled := J.Get('mux', MuxEnabled);
   MuxConcurrency := J.Get('muxcon', MuxConcurrency);
   R := J.Get('route', TJSONArray.Create(['', '', '']));
@@ -105,15 +102,27 @@ var
   J: string;
 begin
   F := TFileStream.Create(FileName, fmCreate);
-  J := TJSONObject.Create(['socks', EnableSocksProxy, 'http',
-    EnableHTTPProxy, 'socks_port', SocksProxyPort, 'http_port',
-    HTTPProxyPort, 'v2ray', V2rayBinaryPath, 'assets', V2rayAssetsPath,
-    'log', byte(V2rayLogLevel), 'dns', DNSServers, 'mtu', KCPMTU,
-    'tti', KCPTTI, 'upcap', KCPUplinkCapacity, 'downcap', KCPDownlinkCapacity,
-    'rbsize', KCPReadBufferSize, 'wbsize', KCPWriteBufferSize,
-    'congestion', KCPCongestionAlgorithm, 'khead', byte(UDPHeaderType),
-    'domstg', byte(DomainStrategy), 'mux', MuxEnabled, 'muxcon',
-    MuxConcurrency, 'route', TJSONArray.Create([Routes[1], Routes[2], Routes[3]])]).FormatJSON;
+  J := TJSONObject.Create([
+    'socks', EnableSocksProxy,
+    'http', EnableHTTPProxy,
+    'socks_port', SocksProxyPort,
+    'http_port', HTTPProxyPort,
+    'v2ray', V2rayBinaryPath,
+    'assets', V2rayAssetsPath,
+    'log', byte(V2rayLogLevel),
+    'dns', DNSServers,
+    'mtu', KCPMTU,
+    'tti', KCPTTI,
+    'upcap', KCPUplinkCapacity,
+    'downcap', KCPDownlinkCapacity,
+    'rbsize', KCPReadBufferSize,
+    'wbsize', KCPWriteBufferSize,
+    'congestion', KCPCongestionAlgorithm,
+    'domstg', integer(DomainStrategy),
+    'mux', MuxEnabled,
+    'muxcon', MuxConcurrency,
+    'route', TJSONArray.Create([Routes[1], Routes[2], Routes[3]])])
+    .FormatJSON;
   F.WriteBuffer(Pointer(J)^, Length(J));
   F.Free;
 end;

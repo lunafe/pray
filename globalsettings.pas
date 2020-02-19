@@ -24,18 +24,15 @@ type
     CheckBoxEnableHTTPProxy: TCheckBox;
     CheckBoxEnableSocksProxy: TCheckBox;
     ComboBoxLogLevel: TComboBox;
-    ComboBoxUDPHeaderType: TComboBox;
     ComboBoxDomainStrategy: TComboBox;
     EditV2rayAssetsPath: TEdit;
     EditDnsServers: TEdit;
     EditV2rayPath: TEdit;
-    GroupBoxUDP: TGroupBox;
     GroupBoxMux: TGroupBox;
     GroupBoxDNSServers: TGroupBox;
     GroupBoxKCPSettings: TGroupBox;
     GroupBoxV2rayConfig: TGroupBox;
     GroupBoxInbound: TGroupBox;
-    LabelUDPHeaderType: TLabel;
     LabelMuxConcurrency: TLabel;
     LabelLogLevel: TLabel;
     LabelV2rayAssetsPath: TLabel;
@@ -188,7 +185,6 @@ begin
   SpinEditReadBufferSize.Value := Settings.KCPReadBufferSize;
   SpinEditWriteBufferSize.Value := Settings.KCPWriteBufferSize;
   CheckBoxCongestion.Checked := Settings.KCPCongestionAlgorithm;
-  ComboBoxUDPHeaderType.ItemIndex := integer(Settings.UDPHeaderType);
   EditDnsServers.Text := Settings.DNSServers;
   ComboBoxDomainStrategy.ItemIndex := integer(Settings.DomainStrategy);
   CheckBoxEnableMux.Checked := Settings.MuxEnabled;
@@ -207,9 +203,6 @@ begin
   else if (SpinEditKCPMTU.Value < 576) or (SpinEditKCPMTU.Value > 1460) then
     Result := False
   else if (SpinEditKCPTTI.Value < 10) or (SpinEditKCPTTI.Value > 100) then
-    Result := False
-  else if (ComboBoxUDPHeaderType.ItemIndex < 0) or
-    (ComboBoxUDPHeaderType.ItemIndex > 5) then
     Result := False
   else if (ComboBoxDomainStrategy.ItemIndex < 0) or
     (ComboBoxDomainStrategy.ItemIndex > 2) then
@@ -236,7 +229,6 @@ begin
     Settings.KCPReadBufferSize := SpinEditReadBufferSize.Value;
     Settings.KCPWriteBufferSize := SpinEditWriteBufferSize.Value;
     Settings.KCPCongestionAlgorithm := CheckBoxCongestion.Checked;
-    Settings.UDPHeaderType := TUDPHeaderType(ComboBoxUDPHeaderType.ItemIndex);
     Settings.DNSServers := EditDnsServers.Text;
     Settings.DomainStrategy := TRouteDomainStrategy(ComboBoxDomainStrategy.ItemIndex);
     Settings.MuxEnabled := CheckBoxEnableMux.Checked;

@@ -102,7 +102,11 @@ object PrayMainWindow: TPrayMainWindow
       Height = 120
       Top = 160
       Width = 577
+      Anchors = [akTop, akLeft, akRight, akBottom]
       Color = clGrayText
+      Font.Color = clWhite
+      Font.Height = -11
+      ParentFont = False
       ReadOnly = True
       ScrollBars = ssAutoVertical
       TabOrder = 8

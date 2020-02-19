@@ -274,6 +274,9 @@ begin
     P.EnableTLS := K.Get('tls', False);
     P.Hostname := K.Get('host', '');
     P.Path := K.Get('path', '');
+    P.UDPHeaderType := TUDPHeaderType(K.Get('udph', 0));
+    P.QUICSecurity := TQUICSecurity(K.Get('qs', 0));
+    P.QUICKey := K.Get('qk', '');
     ListBoxProfiles.Items.Add(P.Name);
     ProfileList.Add(P);
   end;
@@ -292,9 +295,19 @@ begin
   for I in ProfileList do
   begin
     P := TProfile(I);
-    J.Add(TJSONObject.Create(['name', P.Name, 'addr', P.Address, 'port',
-      P.Port, 'id', P.UUID, 'aid', P.AlterID, 'net', integer(P.Network),
-      'tls', P.EnableTLS, 'host', P.Hostname, 'path', P.Path]));
+    J.Add(TJSONObject.Create([
+      'name', P.Name,
+      'addr', P.Address,
+      'port',  P.Port,
+      'id', P.UUID,
+      'aid', P.AlterID,
+      'net', integer(P.Network),
+      'tls', P.EnableTLS,
+      'host', P.Hostname,
+      'path', P.Path,
+      'udph', integer(P.UDPHeaderType),
+      'qs', integer(P.QUICSecurity),
+      'qk', P.QUICKey]));
   end;
   S := J.AsJSON;
   F.WriteBuffer(Pointer(S)^, Length(S));
