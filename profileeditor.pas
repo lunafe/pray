@@ -71,7 +71,7 @@ begin
   ProfileObj.UUID := EditUUID.Text;
   ProfileObj.AlterID := SpinEditAlterID.Value;
   ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
-  ProfileObj.EnableTLS := (CheckBoxEnableTLS.Enabled and CheckBoxEnableTLS.Checked);
+  ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
   ProfileObj.Path := EditPath.Text;
   ProfileObj.UDPHeaderType := TUDPHeaderType(ComboBoxUDPHeaderType.ItemIndex);
@@ -104,7 +104,12 @@ procedure TFormEditProfile.TiggerUDP(FieldsEnabled: boolean);
 begin
   LabelUDPHeaderType.Enabled := FieldsEnabled;
   ComboBoxUDPHeaderType.Enabled := FieldsEnabled;
-  CheckBoxEnableTLS.Enabled := not FieldsEnabled;
+  if FieldsEnabled then
+  begin
+    CheckBoxEnableTLS.Enabled := False;
+    CheckBoxEnableTLS.Checked := False;
+  end
+  else CheckBoxEnableTLS.Enabled := True;
 end;
 
 procedure TFormEditProfile.TiggerQUIC(FieldsEnabled: boolean);
@@ -149,11 +154,19 @@ begin
       TiggerQUIC(False);
       TiggerUDP(False);
     end;
-    rtWS, rtHTTP:
+    rtWS:
     begin
       TiggerHostPath(True);
       TiggerQUIC(False);
       TiggerUDP(False);
+    end;
+    rtHTTP:
+    begin
+      TiggerHostPath(True);
+      TiggerQUIC(False);
+      TiggerUDP(False);
+      CheckBoxEnableTLS.Checked := True;
+      CheckBoxEnableTLS.Enabled := False;
     end;
   end;
 end;

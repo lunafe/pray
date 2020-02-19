@@ -61,7 +61,7 @@ object FormEditProfile: TFormEditProfile
     Caption = 'Stream'
     ClientHeight = 148
     ClientWidth = 325
-    TabOrder = 3
+    TabOrder = 2
     object LabelNetwork: TLabel
       Left = 8
       Height = 15
@@ -207,7 +207,7 @@ object FormEditProfile: TFormEditProfile
     Width = 75
     Caption = 'Save'
     OnClick = ButtonSaveClick
-    TabOrder = 2
+    TabOrder = 3
   end
   object GroupBoxGeneral: TGroupBox
     Left = 8
