@@ -39,7 +39,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Width = 120
           Caption = 'Enable HTTP proxy'
           OnEditingDone = CheckBoxEnableHTTPProxyEditingDone
-          TabOrder = 0
+          TabOrder = 2
         end
         object SpinEditSocksPort: TSpinEdit
           Left = 256
@@ -66,7 +66,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Width = 119
           Caption = 'Enable socks proxy'
           OnEditingDone = CheckBoxEnableSocksProxyEditingDone
-          TabOrder = 2
+          TabOrder = 0
         end
         object LabelHTTPPort: TLabel
           Left = 193

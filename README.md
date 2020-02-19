@@ -8,7 +8,7 @@ Small, fast and no dependency.
 
 - Vmess:// URL support;
 - Import and export;
-- Shadowsocks support;
 - Subscription support;
+- QR Code;
 - Fix bugs;
 - And MORE.

@@ -9,6 +9,8 @@ uses
 
 type
   TRemoteTransport = (rtTCP, rtKCP, rtWS, rtHTTP, rtQUIC);
+  TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS);
+  TShadowsocksEncryption = (seAES128CFB, seAES256CFB, seAES128GCM, seAES256GCM, seCHACHA20, seCHACHA20IETF, seCHACHA20POLY1305, seCHACHA20IETFPOLY1305);
   TUDPHeaderType = (uhNONE, uhSRTP, uhUTP, uhDTLS, uhWECHATVIDEO, uhWIREGUARD);
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
   TRouteListType = (rlDIRECT, rlPROXY, rlDENY);
@@ -23,8 +25,6 @@ type
     LocalHTTPProxyPort: word;
     LocalSocksProxyPort: word;
     EnableLocalSocksUDP: boolean;
-    VMessUserID: string;
-    VMessUserAlterID: word;
     EnableTLS: boolean;
     TLSServerName: string;
     RemoteHostname: string;
@@ -36,12 +36,12 @@ type
     KCPReadBufferSize: byte;
     KCPWriteBufferSize: byte;
     KCPCongestionAlgorithm: boolean;
-    MuxEnabled: boolean;
-    MuxConcurrency: word;
     constructor Create(Address: string; Port: word);
     procedure SetLogLevel(Level: TV2rayLogLevel);
-    procedure SetUser(ID: string; Alter: word);
+    procedure SetVMessUser(ID: string; Alter: word);
+    procedure SetShadowsocks(Password: string; EncryptMethod: TShadowsocksEncryption);
     procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
+    procedure SetMux(Concurrency: word);
     procedure SetUDPHeaderType(HeaderType: TUDPHeaderType);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
@@ -58,7 +58,14 @@ type
     DomainStrategy: string;
     QUICSecurity: string;
     QUICKey: string;
+    VMessUserID: string;
+    VMessUserAlterID: word;
+    SSPassword: string;
+    SSEncryption: string;
+    MuxEnabled: boolean;
+    MuxConcurrency: word;
   private
+    Protocol: TRemoteProtocol;
     RouteDirectDomainList: TStrings;
     RouteDirectIPList: TStrings;
     RouteProxyDomainList: TStrings;
@@ -68,6 +75,7 @@ type
     DNSServers: TStrings;
     function GenerateRouteJSON: TJSONArray;
     function GenerateDNSServerJSON: TJSONArray;
+    function GenerateProxyJSON: TJSONObject;
     function GenerateStreamSettingsJSON: TJSONObject;
   end;
 
@@ -135,10 +143,27 @@ begin
   end;
 end;
 
-procedure TV2rayJsonConfig.SetUser(ID: string; Alter: word);
+procedure TV2rayJsonConfig.SetVMessUser(ID: string; Alter: word);
 begin
   VMessUserID := ID;
   VMessUserAlterID := Alter;
+  Protocol := rpVMESS;
+end;
+
+procedure TV2rayJsonConfig.SetShadowsocks(Password: string; EncryptMethod: TShadowsocksEncryption);
+begin
+  case EncryptMethod of
+    seAES128CFB: SSEncryption := 'aes-128-cfb';
+    seAES256CFB: SSEncryption := 'aes-256-cfb';
+    seAES128GCM: SSEncryption := 'aes-128-gcm';
+    seAES256GCM: SSEncryption := 'aes-256-cfb';
+    seCHACHA20: SSEncryption := 'chacha20';
+    seCHACHA20IETF: SSEncryption := 'chacha20-ietf';
+    seCHACHA20POLY1305: SSEncryption := 'chacha20-poly1305';
+    seCHACHA20IETFPOLY1305: SSEncryption := 'chacha20-ietf-poly1305';
+  end;
+  SSPassword := Password;
+  Protocol := rpSHADOWSOCKS;
 end;
 
 procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
@@ -155,6 +180,16 @@ begin
   case Transport of
     rtKCP, rtQUIC: EnableTLS := False;
     else  EnableTLS := TLS;
+  end;
+end;
+
+procedure TV2rayJsonConfig.SetMux(Concurrency: word);
+begin
+  if Concurrency < 1 then MuxEnabled := False
+  else
+  begin
+    MuxEnabled := True;
+    MuxConcurrency := Concurrency;
   end;
 end;
 
@@ -306,24 +341,21 @@ begin
     L := TJSONArray.Create;
     for X in RouteDirectDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
-      'direct', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'direct', 'domain', L]));
   end;
   if RouteProxyDomainList.Count <> 0 then
   begin
     L := TJSONArray.Create;
     for X in RouteProxyDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
-      'proxy', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'proxy', 'domain', L]));
   end;
   if RouteDenyDomainList.Count <> 0 then
   begin
     L := TJSONArray.Create;
     for X in RouteDenyDomainList do
       L.Add(X);
-    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag',
-      'deny', 'domain', L]));
+    Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'deny', 'domain', L]));
   end;
   if RouteDirectIPList.Count <> 0 then
   begin
@@ -346,6 +378,49 @@ begin
       L.Add(X);
     Result.Add(TJSONObject.Create(['type', 'field', 'outboundTag', 'deny', 'ip', L]));
   end;
+end;
+
+function TV2rayJsonConfig.GenerateProxyJSON: TJSONObject;
+var
+  P: string;
+  S: TJSONObject;
+begin
+  case Protocol of
+    rpVMESS:
+    begin
+      P := 'vmess';
+      S := TJSONObject.Create([
+        'vnext', TJSONArray.Create([
+           TJSONObject.Create([
+             'address', RemoteAddr,
+             'port', RemotePort,
+             'users', TJSONArray.Create([
+               TJSONObject.Create([
+                 'id', VMessUserID,
+                 'alterId', VMessUserAlterID,
+                 'level', 0])])])])]);
+    end;
+    rpSHADOWSOCKS:
+    begin
+      P := 'shadowsocks';
+      S := TJSONObject.Create([
+        'servers', TJSONArray.Create([
+          TJSONObject.Create([
+            'address', RemoteAddr,
+            'port', RemotePort,
+            'method', SSEncryption,
+            'password', SSPassword,
+            'level', 0])])]);
+    end;
+  end;
+  Result := TJSONObject.Create([
+    'tag', 'proxy',
+    'protocol', P,
+    'settings', S,
+    'streamSettings', GenerateStreamSettingsJSON]);
+  if MuxEnabled then Result.Add('mux', TJSONObject.Create([
+    'enabled', True,
+    'concurrency', MuxConcurrency]));
 end;
 
 function TV2rayJsonConfig.GenerateStreamSettingsJSON: TJSONObject;
@@ -409,23 +484,7 @@ begin
       'rules', GenerateRouteJSON]),
     'inbounds', InboundList,
     'outbounds', TJSONArray.Create([
-      TJSONObject.Create([
-        'tag', 'proxy',
-        'protocol', 'vmess',
-        'settings', TJSONObject.Create([
-           'vnext', TJSONArray.Create([
-           TJSONObject.Create([
-             'address', RemoteAddr,
-             'port', RemotePort,
-             'users', TJSONArray.Create([
-               TJSONObject.Create([
-                 'id', VMessUserID,
-                 'level', 0,
-                 'alterId', VMessUserAlterID])])])])]),
-        'mux', TJSONObject.Create([
-          'enabled', MuxEnabled,
-          'concurrency', MuxConcurrency]),
-        'streamSettings', GenerateStreamSettingsJSON]),
+      GenerateProxyJSON,
       TJSONObject.Create([
         'tag', 'direct',
         'protocol', 'freedom',

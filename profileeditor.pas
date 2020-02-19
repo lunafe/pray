@@ -15,9 +15,12 @@ type
   TFormEditProfile = class(TForm)
     ButtonSave: TButton;
     CheckBoxEnableTLS: TCheckBox;
+    ComboBoxMethod: TComboBox;
+    ComboBoxProtocol: TComboBox;
     ComboBoxQUICSecurity: TComboBox;
     ComboBoxNetwork: TComboBox;
     ComboBoxUDPHeaderType: TComboBox;
+    EditPassword: TEdit;
     EditQUICKey: TEdit;
     EditAddress: TEdit;
     EditPath: TEdit;
@@ -27,6 +30,9 @@ type
     GroupBoxGeneral: TGroupBox;
     GroupBoxStream: TGroupBox;
     GroupBoxUser: TGroupBox;
+    LabelMethod: TLabel;
+    LabelPassword: TLabel;
+    LabelProtocol: TLabel;
     LabelQUICKey: TLabel;
     LabelQUICSecurity: TLabel;
     LabelUDPHeaderType: TLabel;
@@ -38,11 +44,15 @@ type
     LabelAlterID: TLabel;
     LabelUUID: TLabel;
     LabelProfileName: TLabel;
+    PageControlProtocolSwitch: TPageControl;
     SpinEditPort: TSpinEdit;
     SpinEditAlterID: TSpinEdit;
+    TabSheetShadowsocksConfig: TTabSheet;
+    TabSheetVMessConfig: TTabSheet;
     procedure ButtonSaveClick(Sender: TObject);
     procedure ApplyProfile(Profile: TProfile);
     procedure ComboBoxNetworkChange(Sender: TObject);
+    procedure ComboBoxProtocolChange(Sender: TObject);
     procedure ComboBoxQUICSecurityChange(Sender: TObject);
 
   public
@@ -68,8 +78,11 @@ begin
   ProfileObj.Name := EditProfileName.Text;
   ProfileObj.Address := EditAddress.Text;
   ProfileObj.Port := SpinEditPort.Value;
+  ProfileObj.Protocol := TRemoteProtocol(ComboBoxProtocol.ItemIndex);
   ProfileObj.UUID := EditUUID.Text;
   ProfileObj.AlterID := SpinEditAlterID.Value;
+  ProfileObj.SSPassword := EditPassword.Text;
+  ProfileObj.SSMethod := TShadowsocksEncryption(ComboBoxMethod.ItemIndex);
   ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
   ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
@@ -86,8 +99,11 @@ begin
   EditProfileName.Text := Profile.Name;
   EditAddress.Text := Profile.Address;
   SpinEditPort.Value := Profile.Port;
+  ComboBoxProtocol.ItemIndex := integer(Profile.Protocol);
   EditUUID.Text := Profile.UUID;
   SpinEditAlterID.Value := Profile.AlterID;
+  EditPassword.Text := Profile.SSPassword;
+  ComboBoxMethod.ItemIndex := integer(Profile.SSMethod);
   ComboBoxNetwork.ItemIndex := integer(Profile.Network);
   CheckBoxEnableTLS.Checked := Profile.EnableTLS;
   EditHostname.Text := Profile.Hostname;
@@ -96,6 +112,7 @@ begin
   ComboBoxQUICSecurity.ItemIndex := integer(Profile.QUICSecurity);
   EditQUICKey.Text := Profile.QUICKey;
   ProfileObj := Profile;
+  ComboBoxProtocolChange(nil);
   ComboBoxNetworkChange(nil);
   SaveAfterExit := False;
 end;
@@ -169,6 +186,11 @@ begin
       CheckBoxEnableTLS.Enabled := False;
     end;
   end;
+end;
+
+procedure TFormEditProfile.ComboBoxProtocolChange(Sender: TObject);
+begin
+  PageControlProtocolSwitch.PageIndex := ComboBoxProtocol.ItemIndex;
 end;
 
 procedure TFormEditProfile.ComboBoxQUICSecurityChange(Sender: TObject);

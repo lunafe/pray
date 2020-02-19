@@ -268,8 +268,11 @@ begin
     P.Name := K.Get('name', 'Unamed');
     P.Address := K.Get('addr', '0.0.0.0');
     P.Port := K.Get('port', 0);
+    P.Protocol := TRemoteProtocol(K.Get('pc', 0));
     P.UUID := K.Get('id', '');
     P.AlterID := K.Get('aid', 0);
+    P.SSPassword := K.Get('sp', '');
+    P.SSMethod := TShadowsocksEncryption(K.Get('sm', 2));
     P.Network := TRemoteTransport(K.Get('net', 0));
     P.EnableTLS := K.Get('tls', False);
     P.Hostname := K.Get('host', '');
@@ -299,8 +302,11 @@ begin
       'name', P.Name,
       'addr', P.Address,
       'port',  P.Port,
+      'pc', integer(P.Protocol),
       'id', P.UUID,
       'aid', P.AlterID,
+      'sp', P.SSPassword,
+      'sm', integer(P.SSMethod),
       'net', integer(P.Network),
       'tls', P.EnableTLS,
       'host', P.Hostname,

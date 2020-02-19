@@ -12,8 +12,11 @@ type
     Name: string;
     Address: string;
     Port: word;
+    Protocol: TRemoteProtocol;
     UUID: string;
     AlterID: word;
+    SSPassword: string;
+    SSMethod: TShadowsocksEncryption;
     Network: TRemoteTransport;
     EnableTLS: boolean;
     Hostname: string;
@@ -35,8 +38,11 @@ begin
   Name := Format('%d%0.2d%0.2d', [Y, M, D]);
   Address := '0.0.0.0';
   Port := 2020;
-  UUID := '00000000-1111-2222-3333-444444444444';
+  Protocol := rpVMESS;
+  UUID := '';
   AlterID := 64;
+  SSPassword := '';
+  SSMethod := seAES128GCM;
   Network := rtTCP;
   EnableTLS := False;
   Hostname := '';
@@ -51,7 +57,10 @@ var
   C: TV2rayJsonConfig;
 begin
   C := TV2rayJsonConfig.Create(Address, Port);
-  C.SetUser(UUID, AlterID);
+  case Protocol of
+    rpVMESS: C.SetVMessUser(UUID, AlterID);
+    rpSHADOWSOCKS: C.SetShadowsocks(SSPassword, SSMethod);
+  end;
   if Settings.EnableSocksProxy then
     C.SetSocksProxy(Settings.SocksProxyPort);
   if Settings.EnableHTTPProxy then
@@ -61,6 +70,7 @@ begin
   C.SetRoute(rlDIRECT, CommaStringList(Settings.Routes[1]));
   C.SetRoute(rlPROXY, CommaStringList(Settings.Routes[2]));
   C.SetRoute(rlDENY, CommaStringList(Settings.Routes[3]));
+  if Settings.MuxEnabled then C.SetMux(Settings.MuxConcurrency);
   C.SetTransport(Network, EnableTLS);
   C.SetHostPath(Hostname, Path);
   C.SetQUIC(QUICSecurity, QUICKey);
