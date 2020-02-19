@@ -192,7 +192,7 @@ object FormEditProfile: TFormEditProfile
       Items.Strings = (
         'NONE'
         'AES-128-GCM'
-        'CHACHA20-POLY1350'
+        'CHACHA20-POLY1305'
       )
       OnChange = ComboBoxQUICSecurityChange
       Style = csDropDownList
