@@ -36,13 +36,13 @@ type
     KCPReadBufferSize: byte;
     KCPWriteBufferSize: byte;
     KCPCongestionAlgorithm: boolean;
+    UDPHeaderType: TUDPHeaderType;
     constructor Create(Address: string; Port: word);
     procedure SetLogLevel(Level: TV2rayLogLevel);
     procedure SetVMessUser(ID: string; Alter: word);
     procedure SetShadowsocks(Password: string; EncryptMethod: TShadowsocksEncryption);
     procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
     procedure SetMux(Concurrency: word);
-    procedure SetUDPHeaderType(HeaderType: TUDPHeaderType);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
     procedure SetSocksProxy(Port: word);
@@ -53,15 +53,14 @@ type
     function ToJSON: TJSONObject;
   protected
     LogLevel: string;
-    NetworkTransport: string;
-    UDPHeaderType: string;
     DomainStrategy: string;
-    QUICSecurity: string;
+    NetworkTransport: TRemoteTransport;
+    QUICSecurity: TQUICSecurity;
     QUICKey: string;
     VMessUserID: string;
     VMessUserAlterID: word;
     SSPassword: string;
-    SSEncryption: string;
+    SSEncryption: TShadowsocksEncryption;
     MuxEnabled: boolean;
     MuxConcurrency: word;
   private
@@ -80,6 +79,10 @@ type
   end;
 
 function CommaStringList(CommaStr: string): TStrings;
+function TransportToString(Transport: TRemoteTransport): string;
+function UDPHeaderTypeToString(HeaderType: TUDPHeaderType): string;
+function QUICSecurityToString(Security: TQUICSecurity): string;
+function ShadowsocksEncMethodToString(Method: TShadowsocksEncryption): string;
 
 implementation
 
@@ -99,6 +102,57 @@ begin
   end;
 end;
 
+function TransportToString(Transport: TRemoteTransport): string;
+begin
+  case Transport of
+    rtTCP: Result := 'tcp';
+    rtKCP: Result := 'kcp';
+    rtWS: Result := 'ws';
+    rtHTTP: Result := 'http';
+    rtQUIC: Result := 'quic';
+    else
+      Result := 'tcp';
+  end;
+end;
+
+function UDPHeaderTypeToString(HeaderType: TUDPHeaderType): string;
+begin
+  case HeaderType of
+    uhNONE: Result := 'none';
+    uhSRTP: Result := 'srtp';
+    uhUTP: Result := 'utp';
+    uhDTLS: Result := 'dtls';
+    uhWECHATVIDEO: Result := 'wechat-video';
+    uhWIREGUARD: Result := 'wireguard';
+    else
+      Result := 'none';
+  end;
+end;
+
+function QUICSecurityToString(Security: TQUICSecurity): string;
+begin
+  case Security of
+    qsNONE: Result := 'none';
+    qsAES: Result := 'aes-128-gcm';
+    qsCHACHA: Result := 'chacha20-poly1305';
+    else Result := 'none';
+  end;
+end;
+
+function ShadowsocksEncMethodToString(Method: TShadowsocksEncryption): string;
+begin
+  case Method of
+    seAES128CFB: Result := 'aes-128-cfb';
+    seAES256CFB: Result := 'aes-256-cfb';
+    seAES128GCM: Result := 'aes-128-gcm';
+    seAES256GCM: Result := 'aes-256-cfb';
+    seCHACHA20: Result := 'chacha20';
+    seCHACHA20IETF: Result := 'chacha20-ietf';
+    seCHACHA20POLY1305: Result := 'chacha20-poly1305';
+    seCHACHA20IETFPOLY1305: Result := 'chacha20-ietf-poly1305';
+  end;
+end;
+
 constructor TV2rayJsonConfig.Create(Address: string; Port: word);
 begin
   RemoteAddr := Address;
@@ -109,9 +163,9 @@ begin
   RemoteHostname := Address;
   RemotePath := '';
   LogLevel := 'debug';
-  NetworkTransport := 'tcp';
+  NetworkTransport := rtTCP;
   TLSServerName := '';
-  UDPHeaderType := 'none';
+  UDPHeaderType := uhNONE;
   KCPMTU := 1350;
   KCPTTI := 20;
   KCPUplinkCapacity := 5;
@@ -152,35 +206,18 @@ end;
 
 procedure TV2rayJsonConfig.SetShadowsocks(Password: string; EncryptMethod: TShadowsocksEncryption);
 begin
-  case EncryptMethod of
-    seAES128CFB: SSEncryption := 'aes-128-cfb';
-    seAES256CFB: SSEncryption := 'aes-256-cfb';
-    seAES128GCM: SSEncryption := 'aes-128-gcm';
-    seAES256GCM: SSEncryption := 'aes-256-cfb';
-    seCHACHA20: SSEncryption := 'chacha20';
-    seCHACHA20IETF: SSEncryption := 'chacha20-ietf';
-    seCHACHA20POLY1305: SSEncryption := 'chacha20-poly1305';
-    seCHACHA20IETFPOLY1305: SSEncryption := 'chacha20-ietf-poly1305';
-  end;
   SSPassword := Password;
+  SSEncryption := EncryptMethod;
   Protocol := rpSHADOWSOCKS;
 end;
 
 procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
 begin
   case Transport of
-    rtTCP: NetworkTransport := 'tcp';
-    rtKCP: NetworkTransport := 'kcp';
-    rtWS: NetworkTransport := 'ws';
-    rtHTTP: NetworkTransport := 'http';
-    rtQUIC: NetworkTransport := 'quic';
-    else
-      NetworkTransport := 'tcp';
-  end;
-  case Transport of
     rtKCP, rtQUIC: EnableTLS := False;
     else  EnableTLS := TLS;
   end;
+  NetworkTransport := Transport;
 end;
 
 procedure TV2rayJsonConfig.SetMux(Concurrency: word);
@@ -209,28 +246,9 @@ end;
 
 procedure TV2rayJsonConfig.SetQUIC(Security: TQUICSecurity = qsNONE; Key: string = '');
 begin
-  case Security of
-    qsNONE: QUICSecurity := 'none';
-    qsAES: QUICSecurity := 'aes-128-gcm';
-    qsCHACHA: QUICSecurity := 'chacha20-poly1305';
-    else QUICSecurity := 'none';
-  end;
   if Security = qsNONE then QUICKey := ''
   else QUICKey := Key;
-end;
-
-procedure TV2rayJsonConfig.SetUDPHeaderType(HeaderType: TUDPHeaderType);
-begin
-  case HeaderType of
-    uhNONE: UDPHeaderType := 'none';
-    uhSRTP: UDPHeaderType := 'srtp';
-    uhUTP: UDPHeaderType := 'utp';
-    uhDTLS: UDPHeaderType := 'dtls';
-    uhWECHATVIDEO: UDPHeaderType := 'wechat-video';
-    uhWIREGUARD: UDPHeaderType := 'wireguard';
-    else
-      UDPHeaderType := 'none';
-  end;
+  QUICSecurity := Security;
 end;
 
 procedure TV2rayJsonConfig.SetRoute(RouteType: TRouteListType; RouteList: TStrings);
@@ -261,9 +279,9 @@ begin
   end;
   IPRegex := TRegExpr.Create;
   IP6Regex := TRegExpr.Create;
-  IPRegex.Expression := '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{0,2})?';
+  IPRegex.Expression := '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(/\d{1,2})?';
   IP6Regex.Expression :=
-    '(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))';
+    '(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))(/\d{1,3})?';
   for R in RouteList do
   begin
     I := R.IndexOf(':');
@@ -408,7 +426,7 @@ begin
           TJSONObject.Create([
             'address', RemoteAddr,
             'port', RemotePort,
-            'method', SSEncryption,
+            'method', ShadowsocksEncMethodToString(SSEncryption),
             'password', SSPassword,
             'level', 0])])]);
     end;
@@ -430,20 +448,23 @@ begin
     TLSStr := 'tls'
   else
     TLSStr := 'none';
-  Result := TJSONObject.Create(['network', NetworkTransport, 'security', TLSStr]);
+  Result := TJSONObject.Create([
+    'network', TransportToString(NetworkTransport),
+    'security', TLSStr]);
   if TLSStr <> 'none' then
     Result.Add('tlsSettings', TJSONObject.Create([
       'serverName', TLSServerName,
       'allowInsecure', True]));
   case NetworkTransport of
-    'ws': Result.Add('wsSettings', TJSONObject.Create([
+    rtWS: Result.Add('wsSettings', TJSONObject.Create([
       'path', RemotePath,
       'headers', TJSONObject.Create(['Host', RemoteHostname])]));
-    'http': Result.Add('httpSettings', TJSONObject.Create([
+    rtHTTP: Result.Add('httpSettings', TJSONObject.Create([
       'host', TJSONArray.Create([RemoteHostname]),
       'path', RemotePath]));
-    'kcp': Result.Add('kcpSettings', TJSONObject.Create([
-      'header', TJSONObject.Create(['type', UDPHeaderType]),
+    rtKCP: Result.Add('kcpSettings', TJSONObject.Create([
+      'header', TJSONObject.Create([
+        'type', UDPHeaderTypeToString(UDPHeaderType)]),
       'congestion', KCPCongestionAlgorithm,
       'mtu', KCPMTU,
       'tti', KCPTTI,
@@ -451,10 +472,11 @@ begin
       'writeBufferSize', KCPWriteBufferSize,
       'uplinkCapacity', KCPUplinkCapacity,
       'downlinkCapacity', KCPDownlinkCapacity]));
-    'quic': Result.Add('quicSettings', TJSONObject.Create([
+    rtQUIC: Result.Add('quicSettings', TJSONObject.Create([
       'security', QUICSecurity,
       'key', QUICKey,
-      'header', TJSONObject.Create(['type', UDPHeaderType])]));
+      'header', TJSONObject.Create([
+        'type', UDPHeaderTypeToString(UDPHeaderType)])]));
   end;
 end;
 

@@ -6,8 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Buttons, ComCtrls, FPJson, Process, Profile,
-  GlobalSettings, ProfileEditor, V2rayJsonConfig;
+  Buttons, ComCtrls, FPJson, Process, Profile, V2rayJsonConfig;
 
 type
 
@@ -23,11 +22,10 @@ type
     procedure ProcessStoped;
   end;
 
-  { TPrayMainWindow }
-
   TPrayMainWindow = class(TForm)
     BitBtnDisconnect: TBitBtn;
     BitBtnConnect: TBitBtn;
+    ButtonShareLink: TButton;
     ButtonGlobalSettings: TButton;
     ButtonAddProfile: TButton;
     ButtonRemoveProfile: TButton;
@@ -43,6 +41,7 @@ type
     procedure ButtonEditProfileClick(Sender: TObject);
     procedure ButtonGlobalSettingsClick(Sender: TObject);
     procedure ButtonRemoveProfileClick(Sender: TObject);
+    procedure ButtonShareLinkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure ListBoxProfilesSelectionChange(Sender: TObject; User: boolean);
@@ -62,6 +61,8 @@ var
   GeneratedJsonPath: string;
 
 implementation
+
+uses GlobalSettings, ProfileEditor, ShareLinkForm;
 
 constructor TV2rayWatchThread.Create(CreateSuspended: boolean; V2rayProcess: TProcess);
 begin
@@ -106,9 +107,11 @@ end;
 
 procedure TV2rayWatchThread.ProcessStoped;
 begin
-  PrayMainWindow.MemoV2rayOutput.Lines.Add('! v2ray process stoped.');
-  PrayMainWindow.StatusBarConnectionStatus.SimpleText := 'Disconnected';
-  Terminate;
+  if not V2Process.Running then
+  begin
+    PrayMainWindow.StatusBarConnectionStatus.SimpleText := 'Disconnected';
+    Terminate;
+  end;
 end;
 
 {$R *.lfm}
@@ -168,16 +171,18 @@ end;
 procedure TPrayMainWindow.BitBtnDisconnectClick(Sender: TObject);
 begin
   if Assigned(V2RayProcess) then
+  begin
+    MemoV2rayOutput.Lines.Add('! stoping v2ray.');
     try
       V2RayProcess.Terminate(0);
     finally
     end;
+  end;
   if Assigned(V2Thread) then
     try
       V2Thread.Terminate;
     finally
     end;
-  StatusBarConnectionStatus.SimpleText := 'Disconnected';
 end;
 
 procedure TPrayMainWindow.ButtonEditProfileClick(Sender: TObject);
@@ -215,6 +220,15 @@ begin
     ProfileList.Delete(I);
     ListBoxProfilesSelectionChange(nil, False);
     SaveProfiles;
+  end;
+end;
+
+procedure TPrayMainWindow.ButtonShareLinkClick(Sender: TObject);
+begin
+  if ListBoxProfiles.ItemIndex <> -1 then
+  begin
+    FormShareLink.ApplyProfile(TProfile(ProfileList[ListBoxProfiles.ItemIndex]));
+    FormShareLink.Show;
   end;
 end;
 

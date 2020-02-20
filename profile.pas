@@ -5,7 +5,7 @@ unit Profile;
 interface
 
 uses
-  Classes, SysUtils, FPJson, V2rayJsonConfig, ProgramSettings;
+  Classes, SysUtils, FPJson, Base64, V2rayJsonConfig, ProgramSettings;
 
 type
   TProfile = class
@@ -26,6 +26,7 @@ type
     QUICKey: string;
     constructor Create;
     function CreateJSON(Settings: TProgramSettings): TJSONObject;
+    function GenerateLink: string;
   end;
 
 implementation
@@ -75,7 +76,7 @@ begin
   C.SetHostPath(Hostname, Path);
   C.SetQUIC(QUICSecurity, QUICKey);
   C.SetLogLevel(Settings.V2rayLogLevel);
-  C.SetUDPHeaderType(UDPHeaderType);
+  C.UDPHeaderType := UDPHeaderType;
   if Network = rtKCP then
   begin
     C.KCPMTU := Settings.KCPMTU;
@@ -87,6 +88,57 @@ begin
     C.KCPCongestionAlgorithm := Settings.KCPCongestionAlgorithm;
   end;
   Result := C.ToJSON;
+end;
+
+function TProfile.GenerateLink: string;
+var
+  TLSStr: string;
+  HostStr: string;
+  PathStr: string;
+  TypeStr: string;
+  R: TJSONObject;
+begin
+  case Network of
+    rtTCP: if EnableTLS then TLSStr := 'tls';
+    rtKCP:
+      if UDPHeaderType <> uhNONE then
+        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+    rtQUIC: begin
+      HostStr := QUICSecurityToString(QUICSecurity);
+      if QUICSecurity <> qsNONE then
+        PathStr := QUICKey;
+      if UDPHeaderType <> uhNONE then
+        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+    end;
+    else begin
+      if EnableTLS then TLSStr := 'tls';
+      HostStr := Hostname;
+      PathStr := Path;
+    end;
+  end;
+  case Protocol of
+    rpVMESS:
+    begin
+      R := TJSONObject.Create([
+        'add', Address,
+        'port', Port,
+        'id', UUID,
+        'aid', AlterID,
+        'net', TransportToString(Network),
+        'ps', Name]);
+      if TLSStr <> '' then R.Add('tls', TLSStr);
+      if HostStr <> '' then R.Add('host', HostStr);
+      if PathStr <> '' then R.Add('path', PathStr);
+      if TypeStr <> '' then R.Add('type', TypeStr);
+      Result := 'vmess://' + EncodeStringBase64(StringReplace(R.AsJSON, ' ', '', [rfReplaceAll]));
+    end;
+    rpSHADOWSOCKS:
+      Result := 'ss://' + EncodeStringBase64(Format('%s:%s@%s:%d', [
+        ShadowsocksEncMethodToString(SSMethod),
+        StringReplace(SSPassword, '@', '%40', [rfReplaceAll]),
+        Address, Port]));
+    else Result := '';
+  end;
 end;
 
 end.

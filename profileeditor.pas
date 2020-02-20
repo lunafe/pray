@@ -5,13 +5,10 @@ unit ProfileEditor;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  Spin, Menus, ExtCtrls, ComCtrls, V2rayJsonConfig, Profile;
+  Classes, SysUtils, Forms, Dialogs, StdCtrls,
+  Spin, Menus, ComCtrls, V2rayJsonConfig, Profile;
 
 type
-
-  { TFormEditProfile }
-
   TFormEditProfile = class(TForm)
     ButtonSave: TButton;
     CheckBoxEnableTLS: TCheckBox;

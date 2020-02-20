@@ -27,7 +27,7 @@ object PrayMainWindow: TPrayMainWindow
       Width = 265
       ItemHeight = 0
       OnSelectionChange = ListBoxProfilesSelectionChange
-      TabOrder = 0
+      TabOrder = 2
     end
     object BitBtnConnect: TBitBtn
       Left = 288
@@ -38,7 +38,7 @@ object PrayMainWindow: TPrayMainWindow
       Font.Height = -15
       OnClick = BitBtnConnectClick
       ParentFont = False
-      TabOrder = 1
+      TabOrder = 3
     end
     object BitBtnDisconnect: TBitBtn
       Left = 288
@@ -49,7 +49,7 @@ object PrayMainWindow: TPrayMainWindow
       Font.Height = -15
       OnClick = BitBtnDisconnectClick
       ParentFont = False
-      TabOrder = 2
+      TabOrder = 4
     end
     object MemoServerInfo: TMemo
       Left = 400
@@ -59,7 +59,8 @@ object PrayMainWindow: TPrayMainWindow
       BorderStyle = bsNone
       Color = clMenu
       Enabled = False
-      TabOrder = 3
+      TabOrder = 0
+      TabStop = False
     end
     object ButtonEditProfile: TButton
       Left = 15
@@ -68,7 +69,7 @@ object PrayMainWindow: TPrayMainWindow
       Width = 59
       Caption = 'Edit'
       OnClick = ButtonEditProfileClick
-      TabOrder = 4
+      TabOrder = 5
     end
     object ButtonRemoveProfile: TButton
       Left = 88
@@ -77,7 +78,7 @@ object PrayMainWindow: TPrayMainWindow
       Width = 59
       Caption = 'Remove'
       OnClick = ButtonRemoveProfileClick
-      TabOrder = 5
+      TabOrder = 6
     end
     object ButtonAddProfile: TButton
       Left = 160
@@ -86,7 +87,16 @@ object PrayMainWindow: TPrayMainWindow
       Width = 59
       Caption = 'Add'
       OnClick = ButtonAddProfileClick
-      TabOrder = 6
+      TabOrder = 7
+    end
+    object ButtonShareLink: TButton
+      Left = 232
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Share'
+      OnClick = ButtonShareLinkClick
+      TabOrder = 8
     end
     object ButtonGlobalSettings: TButton
       Left = 533
@@ -95,7 +105,7 @@ object PrayMainWindow: TPrayMainWindow
       Width = 59
       Caption = 'Settings'
       OnClick = ButtonGlobalSettingsClick
-      TabOrder = 7
+      TabOrder = 9
     end
     object MemoV2rayOutput: TMemo
       Left = 16
@@ -109,7 +119,7 @@ object PrayMainWindow: TPrayMainWindow
       ParentFont = False
       ReadOnly = True
       ScrollBars = ssAutoVertical
-      TabOrder = 8
+      TabOrder = 1
       TabStop = False
       WantReturns = False
       WordWrap = False

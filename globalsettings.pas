@@ -5,12 +5,10 @@ unit GlobalSettings;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
-  Spin, Menus, V2rayJsonConfig, FPJson, ProgramSettings;
+  Classes, SysUtils, Forms, Controls, Dialogs, ComCtrls, StdCtrls,
+  Spin, Menus, V2rayJsonConfig, ProgramSettings;
 
 type
-  { TFormGlobalSettings }
-
   TFormGlobalSettings = class(TForm)
     ButtonRouteSave: TButton;
     ButtonRouteRestore: TButton;
