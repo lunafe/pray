@@ -1,13 +1,14 @@
 object FormShareLink: TFormShareLink
-  Left = 439
+  Left = 525
   Height = 266
-  Top = 137
+  Top = 150
   Width = 358
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Share Link'
   ClientHeight = 266
   ClientWidth = 358
+  Position = poDesktopCenter
   LCLVersion = '2.0.6.0'
   object MemoLinkText: TMemo
     Left = 8

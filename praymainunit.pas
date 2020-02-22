@@ -22,9 +22,12 @@ type
     procedure ProcessStoped;
   end;
 
+  { TPrayMainWindow }
+
   TPrayMainWindow = class(TForm)
     BitBtnDisconnect: TBitBtn;
     BitBtnConnect: TBitBtn;
+    ButtonImport: TButton;
     ButtonShareLink: TButton;
     ButtonGlobalSettings: TButton;
     ButtonAddProfile: TButton;
@@ -40,6 +43,7 @@ type
     procedure ButtonAddProfileClick(Sender: TObject);
     procedure ButtonEditProfileClick(Sender: TObject);
     procedure ButtonGlobalSettingsClick(Sender: TObject);
+    procedure ButtonImportClick(Sender: TObject);
     procedure ButtonRemoveProfileClick(Sender: TObject);
     procedure ButtonShareLinkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -50,6 +54,7 @@ type
   private
     V2RayProcess: TProcess;
     V2Thread: TV2rayWatchThread;
+    procedure IfProfileSelect(ASelected: boolean);
   end;
 
 var
@@ -62,7 +67,7 @@ var
 
 implementation
 
-uses GlobalSettings, ProfileEditor, ShareLinkForm;
+uses GlobalSettings, ProfileEditor, ShareLinkForm, ImportLinksForm;
 
 constructor TV2rayWatchThread.Create(CreateSuspended: boolean; V2rayProcess: TProcess);
 begin
@@ -103,6 +108,7 @@ begin
     PrayMainWindow.MemoV2rayOutput.Lines.Delete(0);
   PrayMainWindow.MemoV2rayOutput.SelStart := Length(PrayMainWindow.MemoV2rayOutput.Text);
   PrayMainWindow.MemoV2rayOutput.Lines.Add(Content.Trim);
+  PrayMainWindow.StatusBarConnectionStatus.SimpleText := 'Connected';
 end;
 
 procedure TV2rayWatchThread.ProcessStoped;
@@ -208,6 +214,27 @@ begin
   FormGlobalSettings.Show;
 end;
 
+procedure TPrayMainWindow.ButtonImportClick(Sender: TObject);
+var
+  P: Pointer;
+begin
+  with FormImportLinks do
+  begin
+    Refresh;
+    ShowModal;
+    if SaveAfterExit then
+    begin
+      for P in ReadyProfileList do
+      begin
+        ProfileList.Add(P);
+        ListBoxProfiles.Items.Add(TProfile(P).Name);
+      end;
+      ListBoxProfilesSelectionChange(nil, False);
+      SaveProfiles;
+    end;
+  end;
+end;
+
 procedure TPrayMainWindow.ButtonRemoveProfileClick(Sender: TObject);
 var
   I: integer;
@@ -244,19 +271,34 @@ begin
   BitBtnDisconnectClick(nil);
 end;
 
+procedure TPrayMainWindow.IfProfileSelect(ASelected: boolean);
+var
+  I: integer;
+  P: TProfile;
+begin
+  ButtonEditProfile.Enabled := ASelected;
+  ButtonRemoveProfile.Enabled := ASelected;
+  BitBtnConnect.Enabled := ASelected;
+  MemoServerInfo.Lines.Clear;
+  if ASelected then
+  begin
+    I := ListBoxProfiles.ItemIndex;
+    P := TProfile(ProfileList[I]);
+    with MemoServerInfo.Lines do
+    begin
+      Add(Format('Remote: %s:%d', [P.Address, P.Port]));
+      Add(Format('Protocol: %s', [RemoteProtocolToString(P.Protocol)]));
+      Add(Format('Network: %s', [TransportToString(P.Network)]));
+    end;
+  end;
+end;
+
 procedure TPrayMainWindow.ListBoxProfilesSelectionChange(Sender: TObject;
   User: boolean);
-var
-  P: TProfile;
-  I: integer;
 begin
-  I := ListBoxProfiles.ItemIndex;
-  if I <> -1 then
-  begin
-    P := TProfile(ProfileList[I]);
-    MemoServerInfo.Lines := TStringList.Create;
-    MemoServerInfo.Text := Format('Remote: %s:%d', [P.Address, P.Port]);
-  end;
+  MemoServerInfo.Lines.Clear;
+  if ListBoxProfiles.ItemIndex = -1 then IfProfileSelect(False)
+  else IfProfileSelect(True);
 end;
 
 procedure TPrayMainWindow.LoadProfiles;

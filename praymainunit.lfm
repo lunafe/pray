@@ -1,7 +1,7 @@
 object PrayMainWindow: TPrayMainWindow
-  Left = 418
+  Left = 0
   Height = 332
-  Top = 227
+  Top = 0
   Width = 628
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
@@ -10,6 +10,7 @@ object PrayMainWindow: TPrayMainWindow
   ClientWidth = 628
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  Position = poDesktopCenter
   LCLVersion = '2.0.6.0'
   object PanelMainPanel: TPanel
     Left = 8
@@ -72,7 +73,7 @@ object PrayMainWindow: TPrayMainWindow
       TabOrder = 5
     end
     object ButtonRemoveProfile: TButton
-      Left = 88
+      Left = 80
       Height = 25
       Top = 128
       Width = 59
@@ -81,7 +82,7 @@ object PrayMainWindow: TPrayMainWindow
       TabOrder = 6
     end
     object ButtonAddProfile: TButton
-      Left = 160
+      Left = 144
       Height = 25
       Top = 128
       Width = 59
@@ -90,7 +91,7 @@ object PrayMainWindow: TPrayMainWindow
       TabOrder = 7
     end
     object ButtonShareLink: TButton
-      Left = 232
+      Left = 208
       Height = 25
       Top = 128
       Width = 59
@@ -105,7 +106,7 @@ object PrayMainWindow: TPrayMainWindow
       Width = 59
       Caption = 'Settings'
       OnClick = ButtonGlobalSettingsClick
-      TabOrder = 9
+      TabOrder = 10
     end
     object MemoV2rayOutput: TMemo
       Left = 16
@@ -123,6 +124,15 @@ object PrayMainWindow: TPrayMainWindow
       TabStop = False
       WantReturns = False
       WordWrap = False
+    end
+    object ButtonImport: TButton
+      Left = 272
+      Height = 25
+      Top = 128
+      Width = 59
+      Caption = 'Import'
+      OnClick = ButtonImportClick
+      TabOrder = 9
     end
   end
   object StatusBarConnectionStatus: TStatusBar

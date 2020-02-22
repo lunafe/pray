@@ -71,7 +71,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="9">
+    <Units Count="10">
       <Unit0>
         <Filename Value="Pray.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -124,9 +124,18 @@
         <Filename Value="sharelinkform.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormShareLink"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="ShareLinkForm"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="importlinksform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormImportLinks"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="ImportLinksForm"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

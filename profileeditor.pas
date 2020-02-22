@@ -51,7 +51,6 @@ type
     procedure ComboBoxNetworkChange(Sender: TObject);
     procedure ComboBoxProtocolChange(Sender: TObject);
     procedure ComboBoxQUICSecurityChange(Sender: TObject);
-
   public
     SaveAfterExit: boolean;
   private

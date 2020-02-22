@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, SysUtils, PrayMainUnit, GlobalSettings, V2rayJsonConfig, ProfileEditor,
-  ProgramSettings, Profile, ShareLinkForm;
+  ProgramSettings, Profile, ShareLinkForm, ImportLinksForm;
 
 {$R *.res}
 
@@ -28,6 +28,7 @@ begin
   Application.CreateForm(TFormGlobalSettings, FormGlobalSettings);
   Application.CreateForm(TFormEditProfile, FormEditProfile);
   Application.CreateForm(TFormShareLink, FormShareLink);
+  Application.CreateForm(TFormImportLinks, FormImportLinks);
   Application.Run;
 end.
 

@@ -1,7 +1,7 @@
 object FormEditProfile: TFormEditProfile
-  Left = 475
+  Left = 0
   Height = 423
-  Top = 311
+  Top = 0
   Width = 346
   Anchors = [akRight, akBottom]
   BorderIcons = [biSystemMenu]
@@ -10,6 +10,7 @@ object FormEditProfile: TFormEditProfile
   ClientHeight = 423
   ClientWidth = 346
   Color = clWindow
+  Position = poMainFormCenter
   LCLVersion = '2.0.6.0'
   object GroupBoxGeneral: TGroupBox
     Left = 8
@@ -111,10 +112,10 @@ object FormEditProfile: TFormEditProfile
       Height = 56
       Top = 24
       Width = 330
-      ActivePage = TabSheetShadowsocksConfig
+      ActivePage = TabSheetVMessConfig
       Anchors = [akTop, akLeft, akRight]
       ShowTabs = False
-      TabIndex = 1
+      TabIndex = 0
       TabOrder = 1
       object TabSheetVMessConfig: TTabSheet
         Caption = 'VMess'

@@ -10,7 +10,7 @@ uses
 type
   TRemoteTransport = (rtTCP, rtKCP, rtWS, rtHTTP, rtQUIC);
   TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS);
-  TShadowsocksEncryption = (seAES128CFB, seAES256CFB, seAES128GCM, seAES256GCM, seCHACHA20, seCHACHA20IETF, seCHACHA20POLY1305, seCHACHA20IETFPOLY1305);
+  TShadowsocksEncryption = (seAES128CFB, seAES256CFB, seAES128GCM, seAES256GCM, seCHACHA20, seCHACHA20IETF, seCHACHA20POLY1305, seCHACHA20IETFPOLY1305, seUNSUPPORTED);
   TUDPHeaderType = (uhNONE, uhSRTP, uhUTP, uhDTLS, uhWECHATVIDEO, uhWIREGUARD);
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
   TRouteListType = (rlDIRECT, rlPROXY, rlDENY);
@@ -83,6 +83,11 @@ function TransportToString(Transport: TRemoteTransport): string;
 function UDPHeaderTypeToString(HeaderType: TUDPHeaderType): string;
 function QUICSecurityToString(Security: TQUICSecurity): string;
 function ShadowsocksEncMethodToString(Method: TShadowsocksEncryption): string;
+function RemoteProtocolToString(Protocol: TRemoteProtocol): string;
+function GetTransportFromString(TransportString: string): TRemoteTransport;
+function GetUDPHeaderTypeFromString(HeaderType: string): TUDPHeaderType;
+function GetQUICSecurityFromString(Security: string): TQUICSecurity;
+function GetSSEncMethodFromString(Method: string): TShadowsocksEncryption;
 
 implementation
 
@@ -145,11 +150,85 @@ begin
     seAES128CFB: Result := 'aes-128-cfb';
     seAES256CFB: Result := 'aes-256-cfb';
     seAES128GCM: Result := 'aes-128-gcm';
-    seAES256GCM: Result := 'aes-256-cfb';
+    seAES256GCM: Result := 'aes-256-gcm';
     seCHACHA20: Result := 'chacha20';
     seCHACHA20IETF: Result := 'chacha20-ietf';
     seCHACHA20POLY1305: Result := 'chacha20-poly1305';
     seCHACHA20IETFPOLY1305: Result := 'chacha20-ietf-poly1305';
+  end;
+end;
+
+function RemoteProtocolToString(Protocol: TRemoteProtocol): string;
+begin
+  case Protocol of
+    rpVMESS: Result := 'VMess';
+    rpSHADOWSOCKS: Result := 'Shadowsocks';
+    else Result := 'Unknown';
+  end;
+end;
+
+function GetTransportFromString(TransportString: string): TRemoteTransport;
+var
+  S: string;
+begin
+  S := TransportString.ToLower;
+  case S of
+    'tcp': Result := rtTCP;
+    'kcp': Result := rtKCP;
+    'ws': Result := rtWS;
+    'http': Result := rtHTTP;
+    'quic': Result := rtQUIC;
+    else Result := rtTCP;
+  end;
+end;
+
+function GetUDPHeaderTypeFromString(HeaderType: string): TUDPHeaderType;
+var
+  S: string;
+begin
+  S := HeaderType.ToLower;
+  case S of
+    'none': Result := uhNONE;
+    'srtp': Result := uhSRTP;
+    'utp': Result := uhUTP;
+    'dtls': Result := uhDTLS;
+    'wechat-video': Result := uhWECHATVIDEO;
+    'wireguard': Result := uhWIREGUARD;
+    else Result := uhNONE;
+  end;
+end;
+
+function GetQUICSecurityFromString(Security: string): TQUICSecurity;
+var
+  S: string;
+begin
+  S := Security.ToLower;
+  case S of
+    'none': Result := qsNONE;
+    'aes-128-gcm': Result := qsAES;
+    'chacha20-poly1305': Result := qsCHACHA;
+    else Result := qsNONE;
+  end;
+end;
+
+function GetSSEncMethodFromString(Method: string): TShadowsocksEncryption;
+var
+  S: string;
+begin
+  S := Method.ToLower;
+  case S of
+    'aes-128-cfb': Result := seAES128CFB;
+    'aes-256-cfb': Result := seAES256CFB;
+    'aes-128-gcm': Result := seAES128GCM;
+    'aes-256-gcm': Result := seAES256GCM;
+    'aead_aes_128_gcm': Result := seAES128GCM;
+    'aead_aes_256_gcm': Result := seAES256GCM;
+    'chacha20': Result := seCHACHA20;
+    'chacha20-ietf': Result := seCHACHA20IETF;
+    'chacha20-poly1305': Result := seCHACHA20POLY1305;
+    'chacha20-ietf-poly1305': Result := seCHACHA20IETFPOLY1305;
+    'aead_chacha20_poly1305': Result := seCHACHA20IETFPOLY1305;
+    else Result := seUNSUPPORTED;
   end;
 end;
 

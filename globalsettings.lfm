@@ -1,7 +1,7 @@
 object FormGlobalSettings: TFormGlobalSettings
-  Left = 417
+  Left = 0
   Height = 303
-  Top = 304
+  Top = 0
   Width = 454
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
@@ -10,6 +10,7 @@ object FormGlobalSettings: TFormGlobalSettings
   ClientWidth = 454
   OnClose = FormClose
   OnCreate = FormCreate
+  Position = poMainFormCenter
   LCLVersion = '2.0.6.0'
   object PageControlGlobalSettings: TPageControl
     Left = 8

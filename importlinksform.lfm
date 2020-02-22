@@ -1,0 +1,135 @@
+object FormImportLinks: TFormImportLinks
+  Left = 0
+  Height = 313
+  Top = 0
+  Width = 453
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = 'Import'
+  ClientHeight = 313
+  ClientWidth = 453
+  OnCreate = FormCreate
+  Position = poMainFormCenter
+  LCLVersion = '2.0.6.0'
+  object PageControlImportSteps: TPageControl
+    Left = 8
+    Height = 296
+    Top = 8
+    Width = 440
+    ActivePage = TabSheetImportStep1
+    ShowTabs = False
+    TabIndex = 0
+    TabOrder = 0
+    object TabSheetImportStep1: TTabSheet
+      Caption = '1'
+      ClientHeight = 288
+      ClientWidth = 432
+      object MemoLinks: TMemo
+        Left = 8
+        Height = 226
+        Top = 24
+        Width = 416
+        TabOrder = 0
+      end
+      object LabelLinks: TLabel
+        Left = 8
+        Height = 15
+        Top = 4
+        Width = 197
+        Caption = 'Paste your links here (vmess://, ss://):'
+        ParentColor = False
+      end
+      object ButtonGotoStep2: TButton
+        Left = 349
+        Height = 25
+        Top = 256
+        Width = 75
+        Caption = 'Next'
+        OnClick = ButtonGotoStep2Click
+        TabOrder = 1
+      end
+      object ButtonClearLinks: TButton
+        Left = 264
+        Height = 25
+        Top = 256
+        Width = 75
+        Caption = 'Clear'
+        OnClick = ButtonClearLinksClick
+        TabOrder = 2
+      end
+      object LabelInfo: TLabel
+        Left = 8
+        Height = 1
+        Top = 266
+        Width = 1
+        ParentColor = False
+      end
+    end
+    object TabSheetImportStep2: TTabSheet
+      Caption = '2'
+      ClientHeight = 328
+      ClientWidth = 432
+      object ListBoxReviewLinks: TListBox
+        Left = 8
+        Height = 224
+        Top = 24
+        Width = 196
+        ItemHeight = 0
+        OnSelectionChange = ListBoxReviewLinksSelectionChange
+        TabOrder = 0
+      end
+      object LabelReviewLinks: TLabel
+        Left = 8
+        Height = 15
+        Top = 4
+        Width = 111
+        Caption = 'Review your imports:'
+        ParentColor = False
+      end
+      object ButtonEdit: TButton
+        Left = 8
+        Height = 25
+        Top = 256
+        Width = 75
+        Caption = 'Edit'
+        OnClick = ButtonEditClick
+        TabOrder = 1
+      end
+      object ButtonRemove: TButton
+        Left = 120
+        Height = 25
+        Top = 256
+        Width = 75
+        Caption = 'Remove'
+        OnClick = ButtonRemoveClick
+        TabOrder = 2
+      end
+      object ButtonSubmit: TButton
+        Left = 349
+        Height = 25
+        Top = 256
+        Width = 75
+        Caption = 'OK'
+        OnClick = ButtonSubmitClick
+        TabOrder = 3
+      end
+      object LabelDetail: TLabel
+        Left = 224
+        Height = 15
+        Top = 4
+        Width = 33
+        Caption = 'Detail:'
+        ParentColor = False
+      end
+      object MemoLinkDetail: TMemo
+        Left = 224
+        Height = 130
+        Top = 24
+        Width = 200
+        ReadOnly = True
+        TabOrder = 4
+        TabStop = False
+      end
+    end
+  end
+end
