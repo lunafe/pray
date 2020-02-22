@@ -40,23 +40,22 @@ var
 begin
   Result := '';
   Source := PAnsiChar(S);
-  LengthSource := length(Source);
-  i:=1;
-  while (i <= LengthSource) do
+  LengthSource := Length(Source);
+  I := 1;
+  while (I <= LengthSource) do
     begin
-      if Source[i-1] <> '%' then
-        Result := Result + Source[i-1]
-      else if (Source[i-1] = '%') and (i+1<=LengthSource) then
+      if Source[I-1] <> '%' then Result := Result + Source[I - 1]
+      else if (Source[I - 1] = '%') and (I + 1 <= LengthSource) then
         try
           begin
-            Result := Result + Chr(Hex2Dec('$'+Source[i]+Source[i+1]));
-            i:=i+2;
+            Result := Result + Chr(Hex2Dec('$'+Source[I]+Source[I + 1]));
+            I := I + 2;
           end;
         except
         end
       else
-        Result := Result + Source[i-1];
-      Inc(i);
+        Result := Result + Source[I - 1];
+      Inc(I);
     end;
 end;
 
