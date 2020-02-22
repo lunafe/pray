@@ -64,8 +64,10 @@ var
   DecodedContent: string;
   VMessJSONObj: TJSONObject;
   R: TRegExpr;
-  C: Integer;
+  C: integer;
+  Q: integer;
   SSName: string;
+  SSBase64Length: integer;
 begin
   if Link.StartsWith('vmess://', True) then
   begin
@@ -101,17 +103,17 @@ begin
   end
   else if Link.StartsWith('ss://', True) then
   begin
+
+    Q := Link.IndexOf('?');
     C := Link.IndexOf('#');
-    if C = -1 then
-    begin
-      DecodedContent := DecodeStringBase64(Link.Substring(5, Link.Length - 5), False);
-      SSName := '';
-    end
-    else
-    begin
-      DecodedContent := DecodeStringBase64(Link.Substring(5, C - 5), False);
-      SSName := URLDecode(Link.Substring(C + 1));
-    end;
+    if C = -1 then SSName := ''
+    else SSName := URLDecode(Link.Substring(C + 1));
+    if (C = -1) and (Q = -1) then SSBase64Length := Link.Length - 5
+    else if (C = -1) then SSBase64Length := Q - 5
+    else if (Q = -1) then SSBase64Length := C - 5
+    else if (C < Q) then SSBase64Length := C - 5
+    else SSBase64Length := Q - 5;
+    DecodedContent := DecodeStringBase64(Link.Substring(5, SSBase64Length), False);
     R := TRegExpr.Create('^([\w\-]+):(.+)@([0-9a-zA-Z\-_\.]+):(\d+)$');
     if R.Exec(DecodedContent) then
     begin

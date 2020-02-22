@@ -264,6 +264,7 @@ begin
   ProfileList := TList.Create;
   if FileExists(ProfileJsonPath) then
     LoadProfiles;
+  ListBoxProfilesSelectionChange(nil, False);
 end;
 
 procedure TPrayMainWindow.FormDestroy(Sender: TObject);
@@ -278,6 +279,7 @@ var
 begin
   ButtonEditProfile.Enabled := ASelected;
   ButtonRemoveProfile.Enabled := ASelected;
+  ButtonShareLink.Enabled := ASelected;
   BitBtnConnect.Enabled := ASelected;
   MemoServerInfo.Lines.Clear;
   if ASelected then

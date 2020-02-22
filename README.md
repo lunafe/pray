@@ -6,7 +6,6 @@ Small, fast and no dependency.
 
 ### TODO:
 
-- Vmess:// URL support;
 - Import and export;
 - Subscription support;
 - QR Code;
