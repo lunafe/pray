@@ -2,21 +2,28 @@ object FormShareLink: TFormShareLink
   Left = 0
   Height = 266
   Top = 0
-  Width = 358
+  Width = 634
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Share Link'
   ClientHeight = 266
-  ClientWidth = 358
+  ClientWidth = 634
+  OnCreate = FormCreate
   Position = poMainFormCenter
   LCLVersion = '2.0.6.0'
   object MemoLinkText: TMemo
     Left = 8
     Height = 250
     Top = 8
-    Width = 342
+    Width = 346
     Anchors = [akTop, akLeft, akRight, akBottom]
     ReadOnly = True
     TabOrder = 0
+  end
+  object ShapeQRCodeLocator: TShape
+    Left = 376
+    Height = 249
+    Top = 8
+    Width = 249
   end
 end
