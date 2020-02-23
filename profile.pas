@@ -66,34 +66,70 @@ var
   R: TRegExpr;
   C: integer;
   Q: integer;
+  SI: string;
   SSName: string;
   SSBase64Length: integer;
 begin
   if Link.StartsWith('vmess://', True) then
+  with LinkProfile do
   begin
     try
       DecodedContent := DecodeStringBase64(Link.Substring(8), False);
       VMessJSONObj := TJSONObject(GetJSON(DecodedContent));
-      LinkProfile.Protocol := rpVMESS;
-      LinkProfile.Address := VMessJSONObj.Get('add', '');
-      LinkProfile.Port := VMessJSONObj.Get('port', 0);
-      LinkProfile.Name := VMessJSONObj.Get('ps', Format(
+      Protocol := rpVMESS;
+      Address := VMessJSONObj.Get('add', '');
+      Port := VMessJSONObj.Get('port', 0);
+      if Port = 0 then
+      begin
+        SI := VMessJSONObj.Get('port', '');
+        if SI <> '' then Val(SI, Port, C);
+      end;
+      Name := VMessJSONObj.Get('ps', Format(
         'VMess<%s:%d>',
-        [LinkProfile.Address, LinkProfile.Port]));
-      LinkProfile.UUID := VMessJSONObj.Get('id', '');
-      LinkProfile.AlterID := VMessJSONObj.Get('aid', 0);
-      LinkProfile.Network := GetTransportFromString(VMessJSONObj.Get('net', ''));
-      case LinkProfile.Network of
-        rtKCP: LinkProfile.UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
+        [Address, Port]));
+      UUID := VMessJSONObj.Get('id', '');
+      AlterID := VMessJSONObj.Get('aid', 0);
+      if AlterID = 0 then
+      begin
+        SI := VMessJSONObj.Get('aid', '');
+        if SI <> '' then Val(SI, AlterID, C);
+      end;
+      Network := GetTransportFromString(VMessJSONObj.Get('net', ''));
+      case Network of
+        rtKCP: UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
         rtWS, rtHTTP:
         begin
-          LinkProfile.Hostname := VMessJSONObj.Get('host', '');
-          LinkProfile.Path := VMessJSONObj.Get('path', '');
+          Hostname := VMessJSONObj.Get('host', '');
+          Path := VMessJSONObj.Get('path', '');
+          EnableTLS := VMessJSONObj.Get('tls', False);
+          if not EnableTLS then
+          begin
+            SI := VMessJSONObj.Get('tls', '');
+            SI := SI.ToLower;
+            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
+              EnableTLS := True;
+            if not EnableTLS then
+             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
+          end;
         end;
         rtQUIC:
         begin
-          LinkProfile.QUICSecurity := GetQUICSecurityFromString(VMessJSONObj.Get('host', ''));
-          LinkProfile.QUICKey := VMessJSONObj.Get('path', '');
+          QUICSecurity := GetQUICSecurityFromString(VMessJSONObj.Get('host', ''));
+          QUICKey := VMessJSONObj.Get('path', '');
+          UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
+        end;
+        rtTCP:
+        begin
+          EnableTLS := VMessJSONObj.Get('tls', False);
+          if not EnableTLS then
+          begin
+            SI := VMessJSONObj.Get('tls', '');
+            SI := SI.ToLower;
+            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
+              EnableTLS := True;
+            if not EnableTLS then
+             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
+          end;
         end;
       end;
       Result := True;
@@ -103,7 +139,6 @@ begin
   end
   else if Link.StartsWith('ss://', True) then
   begin
-
     Q := Link.IndexOf('?');
     C := Link.IndexOf('#');
     if C = -1 then SSName := ''
