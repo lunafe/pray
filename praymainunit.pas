@@ -11,13 +11,14 @@ uses
 type
 
   TV2rayWatchThread = class(TThread)
-    constructor Create(CreateSuspended: boolean; V2rayProcess: TProcess);
+    constructor Create(CreateSuspended: boolean; V2rayProcess: TProcess; AProfileName: string = '');
   protected
     procedure Execute; override;
   private
     Content: string;
     V2Process: TProcess;
     LineNum: word;
+    ProfileName: string;
     procedure UpdateUI;
     procedure ProcessStoped;
   end;
@@ -38,6 +39,7 @@ type
     MemoServerInfo: TMemo;
     PanelMainPanel: TPanel;
     StatusBarConnectionStatus: TStatusBar;
+    TrayIconRunningIcon: TTrayIcon;
     procedure BitBtnConnectClick(Sender: TObject);
     procedure BitBtnDisconnectClick(Sender: TObject);
     procedure ButtonAddProfileClick(Sender: TObject);
@@ -48,9 +50,11 @@ type
     procedure ButtonShareLinkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormWindowStateChange(Sender: TObject);
     procedure ListBoxProfilesSelectionChange(Sender: TObject; User: boolean);
     procedure LoadProfiles;
     procedure SaveProfiles;
+    procedure TrayIconRunningIconClick(Sender: TObject);
   private
     V2RayProcess: TProcess;
     V2Thread: TV2rayWatchThread;
@@ -69,12 +73,13 @@ implementation
 
 uses GlobalSettings, ProfileEditor, ShareLinkForm, ImportLinksForm;
 
-constructor TV2rayWatchThread.Create(CreateSuspended: boolean; V2rayProcess: TProcess);
+constructor TV2rayWatchThread.Create(CreateSuspended: boolean; V2rayProcess: TProcess; AProfileName: string = '');
 begin
   inherited Create(CreateSuspended);
   FreeOnTerminate := True;
   V2Process := V2rayProcess;
   LineNum := 0;
+  ProfileName := AProfileName;
 end;
 
 procedure TV2rayWatchThread.Execute;
@@ -102,13 +107,16 @@ end;
 
 procedure TV2rayWatchThread.UpdateUI;
 begin
-  if LineNum < 1000 then
-    Inc(LineNum)
-  else
-    PrayMainWindow.MemoV2rayOutput.Lines.Delete(0);
-  PrayMainWindow.MemoV2rayOutput.SelStart := Length(PrayMainWindow.MemoV2rayOutput.Text);
-  PrayMainWindow.MemoV2rayOutput.Lines.Add(Content.Trim);
-  PrayMainWindow.StatusBarConnectionStatus.SimpleText := 'Connected';
+  with PrayMainWindow do
+  begin
+    if LineNum < 1000 then
+      Inc(LineNum)
+    else
+      MemoV2rayOutput.Lines.Delete(0);
+    MemoV2rayOutput.SelStart := Length(MemoV2rayOutput.Text);
+    MemoV2rayOutput.Lines.Add(Content.Trim);
+    StatusBarConnectionStatus.SimpleText := 'Connected ' + ProfileName;
+  end;
 end;
 
 procedure TV2rayWatchThread.ProcessStoped;
@@ -168,9 +176,8 @@ begin
       Options := [poNoConsole, poStderrToOutPut, poUsePipes];
       Execute;
     end;
-    V2Thread := TV2rayWatchThread.Create(True, V2RayProcess);
+    V2Thread := TV2rayWatchThread.Create(True, V2RayProcess, P.Name);
     V2Thread.Start;
-    StatusBarConnectionStatus.SimpleText := 'Connected';
   end;
 end;
 
@@ -270,6 +277,15 @@ end;
 procedure TPrayMainWindow.FormDestroy(Sender: TObject);
 begin
   BitBtnDisconnectClick(nil);
+end;
+
+procedure TPrayMainWindow.FormWindowStateChange(Sender: TObject);
+begin
+  if WindowState = wsMinimized then
+  begin
+    TrayIconRunningIcon.Show;
+    Hide;
+  end;
 end;
 
 procedure TPrayMainWindow.IfProfileSelect(ASelected: boolean);
@@ -377,6 +393,13 @@ begin
   F.WriteBuffer(Pointer(S)^, Length(S));
   F.Free;
   J.Free;
+end;
+
+procedure TPrayMainWindow.TrayIconRunningIconClick(Sender: TObject);
+begin
+  WindowState := wsNormal;
+  TrayIconRunningIcon.Hide;
+  Show;
 end;
 
 end.
