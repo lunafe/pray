@@ -9,7 +9,7 @@ uses
 
 type
   TRemoteTransport = (rtTCP, rtKCP, rtWS, rtHTTP, rtQUIC);
-  TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS);
+  TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS, rpVLESS);
   TShadowsocksEncryption = (seAES128CFB, seAES256CFB, seAES128GCM, seAES256GCM, seCHACHA20, seCHACHA20IETF, seCHACHA20POLY1305, seCHACHA20IETFPOLY1305, seUNSUPPORTED);
   TUDPHeaderType = (uhNONE, uhSRTP, uhUTP, uhDTLS, uhWECHATVIDEO, uhWIREGUARD);
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
@@ -41,6 +41,7 @@ type
     procedure SetLogLevel(Level: TV2rayLogLevel);
     procedure SetVMessUser(ID: string; Alter: word);
     procedure SetShadowsocks(Password: string; EncryptMethod: TShadowsocksEncryption);
+    procedure SetVLESS(ID: string; Encryption: string);
     procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
     procedure SetMux(Concurrency: word);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
@@ -61,6 +62,8 @@ type
     VMessUserAlterID: word;
     SSPassword: string;
     SSEncryption: TShadowsocksEncryption;
+    VLESSUserID: string;
+    VLESSEncryption: string;
     MuxEnabled: boolean;
     MuxConcurrency: word;
   private
@@ -163,6 +166,7 @@ begin
   case Protocol of
     rpVMESS: Result := 'VMess';
     rpSHADOWSOCKS: Result := 'Shadowsocks';
+    rpVLESS: Result := 'VLESS';
     else Result := 'Unknown';
   end;
 end;
@@ -288,6 +292,13 @@ begin
   SSPassword := Password;
   SSEncryption := EncryptMethod;
   Protocol := rpSHADOWSOCKS;
+end;
+
+procedure TV2rayJsonConfig.SetVLESS(ID: string; Encryption: string);
+begin
+  VLESSUserID := ID;
+  VLESSEncryption := Encryption;
+  Protocol := rpVLESS;
 end;
 
 procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
@@ -508,6 +519,19 @@ begin
             'method', ShadowsocksEncMethodToString(SSEncryption),
             'password', SSPassword,
             'level', 0])])]);
+    end;
+    rpVLESS:
+    begin
+      P := 'vless';
+      S := TJSONObject.Create([
+        'vnext', TJSONArray.Create([
+          TJSONObject.Create([
+          'address', RemoteAddr,
+          'port', RemotePort,
+          'users', TJSONArray.Create([
+            TJSONObject.Create([
+              'id', VLESSUserID,
+              'encryption', VLESSEncryption])])])])]);
     end;
   end;
   Result := TJSONObject.Create([

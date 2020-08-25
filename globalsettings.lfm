@@ -11,7 +11,7 @@ object FormGlobalSettings: TFormGlobalSettings
   OnClose = FormClose
   OnCreate = FormCreate
   Position = poMainFormCenter
-  LCLVersion = '2.0.6.0'
+  LCLVersion = '2.0.10.0'
   object PageControlGlobalSettings: TPageControl
     Left = 8
     Height = 248
@@ -37,7 +37,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Left = 8
           Height = 19
           Top = 29
-          Width = 120
+          Width = 119
           Caption = 'Enable HTTP proxy'
           OnEditingDone = CheckBoxEnableHTTPProxyEditingDone
           TabOrder = 2
@@ -64,7 +64,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Left = 8
           Height = 19
           Top = 0
-          Width = 119
+          Width = 120
           Caption = 'Enable socks proxy'
           OnEditingDone = CheckBoxEnableSocksProxyEditingDone
           TabOrder = 0
@@ -73,7 +73,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Left = 193
           Height = 15
           Top = 33
-          Width = 58
+          Width = 56
           Caption = 'HTTP port:'
           ParentColor = False
         end
@@ -181,7 +181,7 @@ object FormGlobalSettings: TFormGlobalSettings
     object TabSheetRouteSettings: TTabSheet
       Caption = 'Routes'
       ClientHeight = 220
-      ClientWidth = 427
+      ClientWidth = 432
       object TabControlRouteSetting: TTabControl
         Left = 0
         Height = 216
@@ -455,11 +455,11 @@ object FormGlobalSettings: TFormGlobalSettings
   end
   object OpenDialogFindV2rayBinary: TOpenDialog
     Filter = 'V2ray binary|v2ray.exe|Executable file|*.exe'
-    left = 8
-    top = 272
+    Left = 8
+    Top = 272
   end
   object SelectDirectoryDialogFindV2rayAssets: TSelectDirectoryDialog
-    left = 40
-    top = 272
+    Left = 40
+    Top = 272
   end
 end

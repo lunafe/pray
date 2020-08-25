@@ -17,6 +17,8 @@ type
     AlterID: word;
     SSPassword: string;
     SSMethod: TShadowsocksEncryption;
+    VLESSID: string;
+    VLESSEncryption: string;
     Network: TRemoteTransport;
     EnableTLS: boolean;
     Hostname: string;
@@ -181,6 +183,8 @@ begin
   AlterID := 64;
   SSPassword := '';
   SSMethod := seAES128GCM;
+  VLESSID := '';
+  VLESSEncryption := '';
   Network := rtTCP;
   EnableTLS := False;
   Hostname := '';
@@ -198,6 +202,7 @@ begin
   case Protocol of
     rpVMESS: C.SetVMessUser(UUID, AlterID);
     rpSHADOWSOCKS: C.SetShadowsocks(SSPassword, SSMethod);
+    rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption);
   end;
   if Settings.EnableSocksProxy then
     C.SetSocksProxy(Settings.SocksProxyPort);

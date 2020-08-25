@@ -6,9 +6,12 @@ interface
 
 uses
   Classes, SysUtils, Forms, Dialogs, StdCtrls,
-  Spin, Menus, ComCtrls, V2rayJsonConfig, Profile;
+  Spin, Menus, ComCtrls, V2rayJsonConfig, Profile, Types, Controls;
 
 type
+
+  { TFormEditProfile }
+
   TFormEditProfile = class(TForm)
     ButtonSave: TButton;
     CheckBoxEnableTLS: TCheckBox;
@@ -17,6 +20,8 @@ type
     ComboBoxQUICSecurity: TComboBox;
     ComboBoxNetwork: TComboBox;
     ComboBoxUDPHeaderType: TComboBox;
+    EditVLESSUUID: TEdit;
+    EditVLESSEncryption: TEdit;
     EditPassword: TEdit;
     EditQUICKey: TEdit;
     EditAddress: TEdit;
@@ -27,6 +32,8 @@ type
     GroupBoxGeneral: TGroupBox;
     GroupBoxStream: TGroupBox;
     GroupBoxUser: TGroupBox;
+    LabelVLESSUUID: TLabel;
+    LabelVLESSEncryption: TLabel;
     LabelMethod: TLabel;
     LabelPassword: TLabel;
     LabelProtocol: TLabel;
@@ -44,6 +51,7 @@ type
     PageControlProtocolSwitch: TPageControl;
     SpinEditPort: TSpinEdit;
     SpinEditAlterID: TSpinEdit;
+    TabSheetVLESSConfig: TTabSheet;
     TabSheetShadowsocksConfig: TTabSheet;
     TabSheetVMessConfig: TTabSheet;
     procedure ButtonSaveClick(Sender: TObject);
@@ -79,6 +87,8 @@ begin
   ProfileObj.AlterID := SpinEditAlterID.Value;
   ProfileObj.SSPassword := EditPassword.Text;
   ProfileObj.SSMethod := TShadowsocksEncryption(ComboBoxMethod.ItemIndex);
+  ProfileObj.VLESSID := EditVLESSUUID.Text;
+  ProfileObj.VLESSEncryption := EditVLESSEncryption.Text;
   ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
   ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
@@ -99,6 +109,8 @@ begin
   EditUUID.Text := Profile.UUID;
   SpinEditAlterID.Value := Profile.AlterID;
   EditPassword.Text := Profile.SSPassword;
+  EditVLESSUUID.Text := Profile.VLESSID;
+  EditVLESSEncryption.Text := Profile.VLESSEncryption;
   ComboBoxMethod.ItemIndex := integer(Profile.SSMethod);
   ComboBoxNetwork.ItemIndex := integer(Profile.Network);
   CheckBoxEnableTLS.Checked := Profile.EnableTLS;
@@ -201,5 +213,6 @@ begin
     EditQUICKey.Enabled := True;
   end;
 end;
+
 
 end.

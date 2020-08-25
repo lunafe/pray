@@ -12,7 +12,7 @@ object PrayMainWindow: TPrayMainWindow
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDesktopCenter
-  LCLVersion = '2.0.6.0'
+  LCLVersion = '2.0.10.0'
   object PanelMainPanel: TPanel
     Left = 8
     Height = 288
@@ -9680,7 +9680,7 @@ object PrayMainWindow: TPrayMainWindow
       6082
     }
     OnClick = TrayIconRunningIconClick
-    left = 8
-    top = 2
+    Left = 8
+    Top = 2
   end
 end

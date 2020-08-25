@@ -191,6 +191,7 @@ begin
   CheckBoxEnableSocksProxyEditingDone(nil);
   CheckBoxEnableMuxEditingDone(nil);
   PageControlGlobalSettings.ActivePageIndex := 0;
+  TabControlRouteSetting.TabIndex := 0;
   MemoRuleList.Text := RouteListDirect;
 end;
 

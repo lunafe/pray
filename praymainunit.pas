@@ -343,10 +343,20 @@ begin
     P.Address := K.Get('addr', '0.0.0.0');
     P.Port := K.Get('port', 0);
     P.Protocol := TRemoteProtocol(K.Get('pc', 0));
-    P.UUID := K.Get('id', '');
-    P.AlterID := K.Get('aid', 0);
-    P.SSPassword := K.Get('sp', '');
-    P.SSMethod := TShadowsocksEncryption(K.Get('sm', 2));
+    case P.Protocol of
+      rpVMESS: begin
+        P.UUID := K.Get('s0', '');
+        P.AlterID := K.Get('i0', 0);
+      end;
+      rpSHADOWSOCKS: begin
+        P.SSPassword := K.Get('s0', '');
+        P.SSMethod := TShadowsocksEncryption(K.Get('i0', 2));
+      end;
+      rpVLESS: begin
+        P.VLESSID := K.Get('s0', '');
+        P.VLESSEncryption := K.Get('s1', 'none');
+      end;
+    end;
     P.Network := TRemoteTransport(K.Get('net', 0));
     P.EnableTLS := K.Get('tls', False);
     P.Hostname := K.Get('host', '');
@@ -366,21 +376,40 @@ var
   I: Pointer;
   P: TProfile;
   S: string;
+  PS0: string;
+  PS1: string;
+  PI0: Word;
 begin
   F := TFileStream.Create(ProfileJsonPath, fmCreate);
   J := TJSONArray.Create();
   for I in ProfileList do
   begin
     P := TProfile(I);
+    PS0 := '';
+    PS1 := '';
+    PI0 := 0;
+    case P.Protocol of
+      rpVMESS: begin
+        PS0 := P.UUID;
+        PI0 := P.AlterID;
+      end;
+      rpSHADOWSOCKS: begin
+        PS0 := P.SSPassword;
+        PI0 := Word(P.SSMethod);
+      end;
+      rpVLESS: begin
+        PS0 := P.VLESSID;
+        PS1 := P.VLESSEncryption;
+      end;
+    end;
     J.Add(TJSONObject.Create([
       'name', P.Name,
       'addr', P.Address,
       'port',  P.Port,
       'pc', integer(P.Protocol),
-      'id', P.UUID,
-      'aid', P.AlterID,
-      'sp', P.SSPassword,
-      'sm', integer(P.SSMethod),
+      's0', PS0,
+      's1', PS1,
+      'i0', PI0,
       'net', integer(P.Network),
       'tls', P.EnableTLS,
       'host', P.Hostname,
