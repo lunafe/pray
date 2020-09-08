@@ -110,7 +110,8 @@ begin
   SpinEditAlterID.Value := Profile.AlterID;
   EditPassword.Text := Profile.SSPassword;
   EditVLESSUUID.Text := Profile.VLESSID;
-  EditVLESSEncryption.Text := Profile.VLESSEncryption;
+  if Profile.Protocol = rpVLESS then
+    EditVLESSEncryption.Text := Profile.VLESSEncryption;
   ComboBoxMethod.ItemIndex := integer(Profile.SSMethod);
   ComboBoxNetwork.ItemIndex := integer(Profile.Network);
   CheckBoxEnableTLS.Checked := Profile.EnableTLS;
