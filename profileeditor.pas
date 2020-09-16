@@ -86,15 +86,15 @@ begin
   ProfileObj.UUID := EditUUID.Text;
   ProfileObj.AlterID := SpinEditAlterID.Value;
   ProfileObj.SSPassword := EditPassword.Text;
-  ProfileObj.SSMethod := TShadowsocksEncryption(ComboBoxMethod.ItemIndex);
+  ProfileObj.SSMethod := ComboBoxMethod.Text;
   ProfileObj.VLESSID := EditVLESSUUID.Text;
   ProfileObj.VLESSEncryption := EditVLESSEncryption.Text;
   ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
   ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
   ProfileObj.Hostname := EditHostname.Text;
   ProfileObj.Path := EditPath.Text;
-  ProfileObj.UDPHeaderType := TUDPHeaderType(ComboBoxUDPHeaderType.ItemIndex);
-  ProfileObj.QUICSecurity := TQUICSecurity(ComboBoxQUICSecurity.ItemIndex);
+  ProfileObj.UDPHeaderType := ComboBoxUDPHeaderType.Text;
+  ProfileObj.QUICSecurity := ComboBoxQUICSecurity.Text;
   ProfileObj.QUICKey := EditQUICKey.Text;
   SaveAfterExit := True;
   FormEditProfile.Close;
@@ -112,13 +112,13 @@ begin
   EditVLESSUUID.Text := Profile.VLESSID;
   if Profile.Protocol = rpVLESS then
     EditVLESSEncryption.Text := Profile.VLESSEncryption;
-  ComboBoxMethod.ItemIndex := integer(Profile.SSMethod);
+  ComboBoxMethod.Text := Profile.SSMethod;
   ComboBoxNetwork.ItemIndex := integer(Profile.Network);
   CheckBoxEnableTLS.Checked := Profile.EnableTLS;
   EditHostname.Text := Profile.Hostname;
   EditPath.Text := Profile.Path;
-  ComboBoxUDPHeaderType.ItemIndex := integer(Profile.UDPHeaderType);
-  ComboBoxQUICSecurity.ItemIndex := integer(Profile.QUICSecurity);
+  ComboBoxUDPHeaderType.Text := Profile.UDPHeaderType;
+  ComboBoxQUICSecurity.Text := Profile.QUICSecurity;
   EditQUICKey.Text := Profile.QUICKey;
   ProfileObj := Profile;
   ComboBoxProtocolChange(nil);

@@ -29,8 +29,6 @@ type
     MuxConcurrency: word;
     Routes: array [1..3] of string;
     constructor Create;
-    procedure LoadFile(FileName: string);
-    procedure SaveFile(FileName: string);
   private
     ApplicationRoot: string;
   end;
@@ -60,71 +58,6 @@ begin
   Routes[1] := 'geosite:cn,geoip:cn,geoip:private';
   Routes[2] := '';
   Routes[3] := '';
-end;
-
-procedure TProgramSettings.LoadFile(FileName: string);
-var
-  F: TFileStream;
-  S: string;
-  J: TJSONObject;
-  R: TJSONArray;
-begin
-  F := TFileStream.Create(FileName, fmOpenRead);
-  SetLength(S, F.Size);
-  F.ReadBuffer(Pointer(S)^, Length(S));
-  F.Free;
-  J := TJSONObject(GetJSON(S));
-  EnableSocksProxy := J.Get('socks', EnableSocksProxy);
-  EnableHTTPProxy := J.Get('http', EnableHTTPProxy);
-  SocksProxyPort := J.Get('socks_port', SocksProxyPort);
-  HTTPProxyPort := J.Get('http_port', HTTPProxyPort);
-  V2rayBinaryPath := J.Get('v2ray', V2rayBinaryPath);
-  V2rayAssetsPath := J.Get('assets', V2rayAssetsPath);
-  V2rayLogLevel := TV2rayLogLevel(J.Get('log', integer(V2rayLogLevel)));
-  DNSServers := J.Get('dns', DNSServers);
-  KCPMTU := J.Get('mtu', KCPMTU);
-  KCPTTI := J.Get('tti', KCPTTI);
-  KCPUplinkCapacity := J.Get('upcap', KCPUplinkCapacity);
-  KCPDownlinkCapacity := J.Get('downcap', KCPDownlinkCapacity);
-  KCPCongestionAlgorithm := J.Get('congestion', KCPCongestionAlgorithm);
-  DomainStrategy := TRouteDomainStrategy(J.Get('domstg', integer(DomainStrategy)));
-  MuxEnabled := J.Get('mux', MuxEnabled);
-  MuxConcurrency := J.Get('muxcon', MuxConcurrency);
-  R := J.Get('route', TJSONArray.Create(['', '', '']));
-  Routes[1] := R[0].AsString;
-  Routes[2] := R[1].AsString;
-  Routes[3] := R[2].AsString;
-end;
-
-procedure TProgramSettings.SaveFile(FileName: string);
-var
-  F: TFileStream;
-  J: string;
-begin
-  F := TFileStream.Create(FileName, fmCreate);
-  J := TJSONObject.Create([
-    'socks', EnableSocksProxy,
-    'http', EnableHTTPProxy,
-    'socks_port', SocksProxyPort,
-    'http_port', HTTPProxyPort,
-    'v2ray', V2rayBinaryPath,
-    'assets', V2rayAssetsPath,
-    'log', byte(V2rayLogLevel),
-    'dns', DNSServers,
-    'mtu', KCPMTU,
-    'tti', KCPTTI,
-    'upcap', KCPUplinkCapacity,
-    'downcap', KCPDownlinkCapacity,
-    'rbsize', KCPReadBufferSize,
-    'wbsize', KCPWriteBufferSize,
-    'congestion', KCPCongestionAlgorithm,
-    'domstg', integer(DomainStrategy),
-    'mux', MuxEnabled,
-    'muxcon', MuxConcurrency,
-    'route', TJSONArray.Create([Routes[1], Routes[2], Routes[3]])])
-    .FormatJSON;
-  F.WriteBuffer(Pointer(J)^, Length(J));
-  F.Free;
 end;
 
 end.

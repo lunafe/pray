@@ -16,15 +16,15 @@ type
     UUID: string;
     AlterID: word;
     SSPassword: string;
-    SSMethod: TShadowsocksEncryption;
+    SSMethod: string;
     VLESSID: string;
     VLESSEncryption: string;
     Network: TRemoteTransport;
     EnableTLS: boolean;
     Hostname: string;
     Path: string;
-    UDPHeaderType: TUDPHeaderType;
-    QUICSecurity: TQUICSecurity;
+    UDPHeaderType: string;
+    QUICSecurity: string;
     QUICKey: string;
     constructor Create;
     function CreateJSON(Settings: TProgramSettings): TJSONObject;
@@ -98,7 +98,7 @@ begin
       end;
       Network := GetTransportFromString(VMessJSONObj.Get('net', ''));
       case Network of
-        rtKCP: UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
+        rtKCP: UDPHeaderType := VMessJSONObj.Get('type', '');
         rtWS, rtHTTP:
         begin
           Hostname := VMessJSONObj.Get('host', '');
@@ -116,9 +116,9 @@ begin
         end;
         rtQUIC:
         begin
-          QUICSecurity := GetQUICSecurityFromString(VMessJSONObj.Get('host', ''));
+          QUICSecurity := VMessJSONObj.Get('host', '');
           QUICKey := VMessJSONObj.Get('path', '');
-          UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
+          UDPHeaderType := VMessJSONObj.Get('type', '');
         end;
         rtTCP:
         begin
@@ -160,10 +160,10 @@ begin
       if SSName = '' then
         LinkProfile.Name := Format('SS<%s:%d>', [LinkProfile.Address, LinkProfile.Port])
       else LinkProfile.Name := SSName;
-      LinkProfile.SSMethod := GetSSEncMethodFromString(R.Match[1]);
+      LinkProfile.SSMethod := R.Match[1];
       LinkProfile.SSPassword := R.Match[2];
-      if LinkProfile.SSMethod = seUNSUPPORTED then Result := False
-      else Result := True;
+      //if LinkProfile.SSMethod = seUNSUPPORTED then Result := False
+      //else Result := True;
     end
     else Result := False;
   end
@@ -182,15 +182,15 @@ begin
   UUID := '';
   AlterID := 64;
   SSPassword := '';
-  SSMethod := seAES128GCM;
+  SSMethod := 'aes-128-gcm';
   VLESSID := '';
   VLESSEncryption := '';
   Network := rtTCP;
   EnableTLS := False;
   Hostname := '';
   Path := '';
-  UDPHeaderType := uhNONE;
-  QUICSecurity := qsNONE;
+  UDPHeaderType := 'none';
+  QUICSecurity := 'none';
   QUICKey := '';
 end;
 
@@ -243,14 +243,14 @@ begin
   case Network of
     rtTCP: if EnableTLS then TLSStr := 'tls';
     rtKCP:
-      if UDPHeaderType <> uhNONE then
-        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+      if UDPHeaderType <> 'none' then
+        TypeStr := UDPHeaderType;
     rtQUIC: begin
-      HostStr := QUICSecurityToString(QUICSecurity);
-      if QUICSecurity <> qsNONE then
+      HostStr := QUICSecurity;
+      if QUICSecurity <> 'none' then
         PathStr := QUICKey;
-      if UDPHeaderType <> uhNONE then
-        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+      if UDPHeaderType <> 'none' then
+        TypeStr := UDPHeaderType;
     end;
     else begin
       if EnableTLS then TLSStr := 'tls';
@@ -276,9 +276,7 @@ begin
     end;
     rpSHADOWSOCKS:
       Result := 'ss://' + EncodeStringBase64(Format('%s:%s@%s:%d', [
-        ShadowsocksEncMethodToString(SSMethod),
-        SSPassword,
-        Address, Port]));
+        SSMethod, SSPassword, Address, Port]));
     else Result := '';
   end;
 end;
