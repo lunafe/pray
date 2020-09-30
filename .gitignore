@@ -7,3 +7,5 @@ lib
 *.res
 *.lps
 *.json
+*.db
+*.dll
