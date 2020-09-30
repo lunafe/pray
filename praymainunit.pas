@@ -329,6 +329,7 @@ begin
     begin
       Name := FieldByName('name').AsString;
       Address := FieldByName('address').AsString;
+      Port := FieldByName('port').AsInteger;
       Protocol := TRemoteProtocol(FieldByName('protocol').AsInteger);
       Network := TRemoteTransport(FieldByName('network').AsInteger);
       EnableTLS := FieldByName('tls_enabled').AsBoolean;
