@@ -20,6 +20,7 @@ type
     ComboBoxQUICSecurity: TComboBox;
     ComboBoxNetwork: TComboBox;
     ComboBoxUDPHeaderType: TComboBox;
+    EditTrojanPassword: TEdit;
     EditVLESSUUID: TEdit;
     EditVLESSEncryption: TEdit;
     EditPassword: TEdit;
@@ -32,6 +33,7 @@ type
     GroupBoxGeneral: TGroupBox;
     GroupBoxStream: TGroupBox;
     GroupBoxUser: TGroupBox;
+    LabelTrojanPassword: TLabel;
     LabelVLESSUUID: TLabel;
     LabelVLESSEncryption: TLabel;
     LabelMethod: TLabel;
@@ -51,6 +53,7 @@ type
     PageControlProtocolSwitch: TPageControl;
     SpinEditPort: TSpinEdit;
     SpinEditAlterID: TSpinEdit;
+    TabSheetTrojanConfig: TTabSheet;
     TabSheetVLESSConfig: TTabSheet;
     TabSheetShadowsocksConfig: TTabSheet;
     TabSheetVMessConfig: TTabSheet;
@@ -79,47 +82,53 @@ implementation
 
 procedure TFormEditProfile.ButtonSaveClick(Sender: TObject);
 begin
-  ProfileObj.Name := EditProfileName.Text;
-  ProfileObj.Address := EditAddress.Text;
-  ProfileObj.Port := SpinEditPort.Value;
-  ProfileObj.Protocol := TRemoteProtocol(ComboBoxProtocol.ItemIndex);
-  ProfileObj.UUID := EditUUID.Text;
-  ProfileObj.AlterID := SpinEditAlterID.Value;
-  ProfileObj.SSPassword := EditPassword.Text;
-  ProfileObj.SSMethod := ComboBoxMethod.Text;
-  ProfileObj.VLESSID := EditVLESSUUID.Text;
-  ProfileObj.VLESSEncryption := EditVLESSEncryption.Text;
-  ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
-  ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
-  ProfileObj.Hostname := EditHostname.Text;
-  ProfileObj.Path := EditPath.Text;
-  ProfileObj.UDPHeaderType := ComboBoxUDPHeaderType.Text;
-  ProfileObj.QUICSecurity := ComboBoxQUICSecurity.Text;
-  ProfileObj.QUICKey := EditQUICKey.Text;
+  with ProfileObj do begin
+    Name := EditProfileName.Text;
+    Address := EditAddress.Text;
+    Port := SpinEditPort.Value;
+    Protocol := TRemoteProtocol(ComboBoxProtocol.ItemIndex);
+    UUID := EditUUID.Text;
+    AlterID := SpinEditAlterID.Value;
+    SSPassword := EditPassword.Text;
+    SSMethod := ComboBoxMethod.Text;
+    VLESSID := EditVLESSUUID.Text;
+    VLESSEncryption := EditVLESSEncryption.Text;
+    TrojanPassword := EditTrojanPassword.Text;
+    Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
+    EnableTLS := CheckBoxEnableTLS.Checked;
+    Hostname := EditHostname.Text;
+    Path := EditPath.Text;
+    UDPHeaderType := ComboBoxUDPHeaderType.Text;
+    QUICSecurity := ComboBoxQUICSecurity.Text;
+    QUICKey := EditQUICKey.Text;
+  end;
   SaveAfterExit := True;
   FormEditProfile.Close;
 end;
 
 procedure TFormEditProfile.ApplyProfile(Profile: TProfile);
 begin
-  EditProfileName.Text := Profile.Name;
-  EditAddress.Text := Profile.Address;
-  SpinEditPort.Value := Profile.Port;
-  ComboBoxProtocol.ItemIndex := integer(Profile.Protocol);
-  EditUUID.Text := Profile.UUID;
-  SpinEditAlterID.Value := Profile.AlterID;
-  EditPassword.Text := Profile.SSPassword;
-  EditVLESSUUID.Text := Profile.VLESSID;
-  if Profile.Protocol = rpVLESS then
-    EditVLESSEncryption.Text := Profile.VLESSEncryption;
-  ComboBoxMethod.Text := Profile.SSMethod;
-  ComboBoxNetwork.ItemIndex := integer(Profile.Network);
-  CheckBoxEnableTLS.Checked := Profile.EnableTLS;
-  EditHostname.Text := Profile.Hostname;
-  EditPath.Text := Profile.Path;
-  ComboBoxUDPHeaderType.Text := Profile.UDPHeaderType;
-  ComboBoxQUICSecurity.Text := Profile.QUICSecurity;
-  EditQUICKey.Text := Profile.QUICKey;
+  with Profile do begin
+    EditProfileName.Text := Profile.Name;
+    EditAddress.Text := Address;
+    SpinEditPort.Value := Port;
+    ComboBoxProtocol.ItemIndex := integer(Protocol);
+    EditUUID.Text := UUID;
+    SpinEditAlterID.Value := AlterID;
+    EditPassword.Text := SSPassword;
+    EditVLESSUUID.Text := VLESSID;
+    EditTrojanPassword.Text := TrojanPassword;
+    if Protocol = rpVLESS then
+      EditVLESSEncryption.Text := VLESSEncryption;
+    ComboBoxMethod.Text := SSMethod;
+    ComboBoxNetwork.ItemIndex := integer(Network);
+    CheckBoxEnableTLS.Checked := EnableTLS;
+    EditHostname.Text := Hostname;
+    EditPath.Text := Path;
+    ComboBoxUDPHeaderType.Text := UDPHeaderType;
+    ComboBoxQUICSecurity.Text := QUICSecurity;
+    EditQUICKey.Text := QUICKey;
+  end;
   ProfileObj := Profile;
   ComboBoxProtocolChange(nil);
   ComboBoxNetworkChange(nil);

@@ -19,6 +19,7 @@ type
     SSMethod: string;
     VLESSID: string;
     VLESSEncryption: string;
+    TrojanPassword: string;
     Network: TRemoteTransport;
     EnableTLS: boolean;
     Hostname: string;
@@ -185,6 +186,7 @@ begin
   SSMethod := 'aes-128-gcm';
   VLESSID := '';
   VLESSEncryption := '';
+  TrojanPassword := '';
   Network := rtTCP;
   EnableTLS := False;
   Hostname := '';
@@ -203,6 +205,7 @@ begin
     rpVMESS: C.SetVMessUser(UUID, AlterID);
     rpSHADOWSOCKS: C.SetShadowsocks(SSPassword, SSMethod);
     rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption);
+    rpTROJAN: C.SetTrojan(TrojanPassword);
   end;
   if Settings.EnableSocksProxy then
     C.SetSocksProxy(Settings.SocksProxyPort);

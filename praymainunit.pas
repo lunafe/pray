@@ -356,6 +356,8 @@ begin
             VLESSID := V1;
             VLESSEncryption := V2;
           end;
+        rpTROJAN:
+          TrojanPassword := V1;
       end;
       with MemoServerInfo.Lines do
       begin
@@ -414,6 +416,11 @@ begin
         begin
           V1 := VLESSID;
           V2 := VLESSEncryption;
+        end;
+      rpTROJAN:
+        begin
+          V1 := TrojanPassword;
+          V2 := ''
         end;
     end;
     if ProfileID < 1 then

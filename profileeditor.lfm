@@ -94,6 +94,7 @@ object FormEditProfile: TFormEditProfile
         'VMess'
         'Shadowsocks'
         'VLESS'
+        'Trojan'
       )
       OnChange = ComboBoxProtocolChange
       Style = csDropDownList
@@ -239,6 +240,26 @@ object FormEditProfile: TFormEditProfile
           Width = 152
           TabOrder = 1
           Text = 'none'
+        end
+      end
+      object TabSheetTrojanConfig: TTabSheet
+        Caption = 'Trojan'
+        ClientHeight = 63
+        ClientWidth = 322
+        object LabelTrojanPassword: TLabel
+          Left = 10
+          Height = 15
+          Top = 8
+          Width = 53
+          Caption = 'Password:'
+          ParentColor = False
+        end
+        object EditTrojanPassword: TEdit
+          Left = 154
+          Height = 23
+          Top = 4
+          Width = 160
+          TabOrder = 0
         end
       end
     end

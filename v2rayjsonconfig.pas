@@ -9,7 +9,7 @@ uses
 
 type
   TRemoteTransport = (rtTCP, rtKCP, rtWS, rtHTTP, rtQUIC);
-  TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS, rpVLESS);
+  TRemoteProtocol = (rpVMESS, rpSHADOWSOCKS, rpVLESS, rpTROJAN);
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
   TRouteListType = (rlDIRECT, rlPROXY, rlDENY);
   TRouteDomainStrategy = (dsASIS, dsNONMATCH, dsDEMAND);
@@ -39,6 +39,7 @@ type
     procedure SetVMessUser(ID: string; Alter: word);
     procedure SetShadowsocks(Password: string; EncryptMethod: string);
     procedure SetVLESS(ID: string; Encryption: string);
+    procedure SetTrojan(Password: string);
     procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
     procedure SetMux(Concurrency: word);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
@@ -61,6 +62,7 @@ type
     SSEncryption: string;
     VLESSUserID: string;
     VLESSEncryption: string;
+    TrojanPassword: string;
     MuxEnabled: boolean;
     MuxConcurrency: word;
   private
@@ -120,6 +122,7 @@ begin
     rpVMESS: Result := 'VMess';
     rpSHADOWSOCKS: Result := 'Shadowsocks';
     rpVLESS: Result := 'VLESS';
+    rpTROJAN: Result := 'Trojan';
     else Result := 'Unknown';
   end;
 end;
@@ -202,6 +205,12 @@ begin
   VLESSUserID := ID;
   VLESSEncryption := Encryption;
   Protocol := rpVLESS;
+end;
+
+procedure TV2rayJsonConfig.SetTrojan(Password: string);
+begin
+  TrojanPassword := Password;
+  Protocol := rpTROJAN;
 end;
 
 procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
@@ -435,6 +444,17 @@ begin
             TJSONObject.Create([
               'id', VLESSUserID,
               'encryption', VLESSEncryption])])])])]);
+    end;
+    rpTROJAN:
+    begin
+      P := 'trojan';
+      S := TJSONObject.Create([
+        'servers', TJSONArray.Create([
+          TJSONObject.Create([
+            'address', RemoteAddr,
+            'port', RemotePort,
+            'password', TrojanPassword,
+            'level', 0])])]);
     end;
   end;
   Result := TJSONObject.Create([
