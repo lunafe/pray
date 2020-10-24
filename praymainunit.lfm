@@ -9718,8 +9718,24 @@ object PrayMainWindow: TPrayMainWindow
     )
     Script.Strings = (
       'CREATE TABLE `settings` (`name` CHARACTER(20) PRIMARY KEY, `value` TEXT);'
-      'CREATE TABLE `profiles` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `address` TEXT, `port` INTEGER, `protocol` INTEGER, `network` INTEGER, `protocol_value1` TEXT, `protocol_value2` TEXT, `tls_enabled` BOOLEAN DEFAULT 0, `hostname` TEXT, `path` TEXT, `udp_header` TEXT, `quic_security` TEXT, `quic_key` TEXT);'
-      'INSERT INTO `settings` VALUES(''pray_dbversion'', ''1'');'
+      'CREATE TABLE `profiles` ('
+      '  `id` INTEGER PRIMARY KEY AUTOINCREMENT,'
+      '  `name` TEXT,'
+      '  `address` TEXT,'
+      '  `port` INTEGER,'
+      '  `protocol` INTEGER,'
+      '  `network` INTEGER,'
+      '  `protocol_value1` TEXT,'
+      '  `protocol_value2` TEXT,'
+      '  `flow` TEXT,'
+      '  `stream_security` INTEGER DEFAULT 0,'
+      '  `hostname` TEXT,'
+      '  `path` TEXT,'
+      '  `udp_header` TEXT,'
+      '  `quic_security` TEXT,'
+      '  `quic_key` TEXT'
+      '  );'
+      'INSERT INTO `settings` VALUES(''pray_dbversion'', ''2'');'
       'INSERT INTO `settings` VALUES(''mux_enabled'', ''0'');'
       'INSERT INTO `settings` VALUES(''mux_concurrency'', ''16'');'
       'INSERT INTO `settings` VALUES(''socks_enabled'', ''1'');'
@@ -9801,13 +9817,14 @@ object PrayMainWindow: TPrayMainWindow
       'INSERT INTO `profiles` ('
       '    `name`, `address`, `port`,'
       '    `protocol`, `network`, `protocol_value1`,'
-      '    `protocol_value2`, `tls_enabled`,'
-      '    `hostname`, `path`, `udp_header`,'
-      '    `quic_security`, `quic_key`)'
+      '    `protocol_value2`, `flow`,'
+      '    `stream_security`, `hostname`, `path`,'
+      '    `udp_header`, `quic_security`, `quic_key`'
+      '    )'
       'VALUES ('
       '    :name, :address, :port,'
       '    :protocol, :network, :pv1, :pv2,'
-      '    :tls, :hostname, :path,'
+      '    :flow, :ssec, :hostname, :path,'
       '    :udph, :quicsec, :quickey'
       '    );'
     )
@@ -9849,7 +9866,12 @@ object PrayMainWindow: TPrayMainWindow
       end    
       item
         DataType = ftUnknown
-        Name = 'tls'
+        Name = 'flow'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'ssec'
         ParamType = ptInput
       end    
       item
@@ -9889,9 +9911,10 @@ object PrayMainWindow: TPrayMainWindow
       '  `name`=:name, `address`=:address, `port`=:port,'
       '  `protocol`=:protocol, `network`=:network,'
       '  `protocol_value1`=:pv1, `protocol_value2`=:pv2,'
-      '  `tls_enabled`=:tls, `hostname`=:hostname,'
-      '  `path`=:path, `udp_header`=:udph,'
-      '  `quic_security`=:quicsec, `quic_key`=:quickey'
+      '  `flow`=:flow, `stream_security`=:ssec,'
+      '  `hostname`=:hostname, `path`=:path,'
+      '  `udp_header`=:udph, `quic_security`=:quicsec,'
+      '  `quic_key`=:quickey'
       ' WHERE `id`=:id;'
     )
     Params = <    
@@ -9932,7 +9955,12 @@ object PrayMainWindow: TPrayMainWindow
       end    
       item
         DataType = ftUnknown
-        Name = 'tls'
+        Name = 'flow'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'ssec'
         ParamType = ptInput
       end    
       item

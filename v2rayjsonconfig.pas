@@ -13,6 +13,7 @@ type
   TV2rayLogLevel = (llDEBUG, llINFO, llWARNING, llERROR, llNONE);
   TRouteListType = (rlDIRECT, rlPROXY, rlDENY);
   TRouteDomainStrategy = (dsASIS, dsNONMATCH, dsDEMAND);
+  TSecurityOptions = (soNONE, soTLS, soXTLS);
 
   TV2rayJsonConfig = class
     RemoteAddr: string;
@@ -22,7 +23,7 @@ type
     LocalHTTPProxyPort: word;
     LocalSocksProxyPort: word;
     EnableLocalSocksUDP: boolean;
-    EnableTLS: boolean;
+    StreamSecurity: TSecurityOptions;
     TLSServerName: string;
     RemoteHostname: string;
     RemotePath: string;
@@ -38,9 +39,9 @@ type
     procedure SetLogLevel(Level: TV2rayLogLevel);
     procedure SetVMessUser(ID: string; Alter: word);
     procedure SetShadowsocks(Password: string; EncryptMethod: string);
-    procedure SetVLESS(ID: string; Encryption: string);
-    procedure SetTrojan(Password: string);
-    procedure SetTransport(Transport: TRemoteTransport; TLS: boolean);
+    procedure SetVLESS(ID: string; Encryption: string = 'none'; VLESSFlow: string = '');
+    procedure SetTrojan(Password: string; TrojanFlow: string = '');
+    procedure SetTransport(Transport: TRemoteTransport; Security: TSecurityOptions);
     procedure SetMux(Concurrency: word);
     procedure SetRoute(RouteType: TRouteListType; RouteList: TStrings);
     procedure SetRouteDomainStrategy(Strategy: TRouteDomainStrategy);
@@ -56,6 +57,7 @@ type
     NetworkTransport: TRemoteTransport;
     QUICSecurity: string;
     QUICKey: string;
+    Flow: string;
     VMessUserID: string;
     VMessUserAlterID: word;
     SSPassword: string;
@@ -81,6 +83,7 @@ type
   end;
 
 function CommaStringList(CommaStr: string): TStrings;
+function SecurityOptionToString(SecurityOption: TSecurityOptions): string;
 function TransportToString(Transport: TRemoteTransport): string;
 function RemoteProtocolToString(Protocol: TRemoteProtocol): string;
 function GetTransportFromString(TransportString: string): TRemoteTransport;
@@ -100,6 +103,16 @@ begin
     Y := X.Trim;
     if Length(Y) > 0 then
       Result.Add(Y);
+  end;
+end;
+
+function SecurityOptionToString(SecurityOption: TSecurityOptions): string;
+begin
+  case SecurityOption of
+    soNONE: Result := 'none';
+    soTLS: Result := 'tls';
+    soXTLS: Result := 'xtls';
+    else Result := 'none';
   end;
 end;
 
@@ -200,24 +213,26 @@ begin
   Protocol := rpSHADOWSOCKS;
 end;
 
-procedure TV2rayJsonConfig.SetVLESS(ID: string; Encryption: string);
+procedure TV2rayJsonConfig.SetVLESS(ID: string; Encryption: string = 'none'; VLESSFlow: string = '');
 begin
   VLESSUserID := ID;
   VLESSEncryption := Encryption;
+  Flow := VLESSFlow;
   Protocol := rpVLESS;
 end;
 
-procedure TV2rayJsonConfig.SetTrojan(Password: string);
+procedure TV2rayJsonConfig.SetTrojan(Password: string; TrojanFlow: string = '');
 begin
   TrojanPassword := Password;
+  Flow := TrojanFlow;
   Protocol := rpTROJAN;
 end;
 
-procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; TLS: boolean);
+procedure TV2rayJsonConfig.SetTransport(Transport: TRemoteTransport; Security: TSecurityOptions);
 begin
   case Transport of
-    rtKCP, rtQUIC: EnableTLS := False;
-    else  EnableTLS := TLS;
+    rtKCP, rtQUIC: StreamSecurity := soNONE;
+    else StreamSecurity := Security;
   end;
   NetworkTransport := Transport;
 end;
@@ -443,6 +458,7 @@ begin
           'users', TJSONArray.Create([
             TJSONObject.Create([
               'id', VLESSUserID,
+              'flow', Flow,
               'encryption', VLESSEncryption])])])])]);
     end;
     rpTROJAN:
@@ -454,6 +470,7 @@ begin
             'address', RemoteAddr,
             'port', RemotePort,
             'password', TrojanPassword,
+            'flow', Flow,
             'level', 0])])]);
     end;
   end;
@@ -468,19 +485,20 @@ begin
 end;
 
 function TV2rayJsonConfig.GenerateStreamSettingsJSON: TJSONObject;
-var TLSStr: string;
+var
+  SecurityOption: string;
 begin
-  if EnableTLS then
-    TLSStr := 'tls'
-  else
-    TLSStr := 'none';
   Result := TJSONObject.Create([
     'network', TransportToString(NetworkTransport),
-    'security', TLSStr]);
-  if TLSStr <> 'none' then
-    Result.Add('tlsSettings', TJSONObject.Create([
+    'security', SecurityOptionToString(StreamSecurity)]);
+  case StreamSecurity of
+    soTLS: Result.Add('tlsSettings', TJSONObject.Create([
       'serverName', TLSServerName,
-      'allowInsecure', True]));
+      'allowInsecure', False]));
+    soXTLS: Result.Add('xtlsSettings', TJSONObject.Create([
+      'serverName', TLSServerName,
+      'allowInsecure', False]));
+  end;
   case NetworkTransport of
     rtWS: Result.Add('wsSettings', TJSONObject.Create([
       'path', RemotePath,

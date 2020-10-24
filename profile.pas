@@ -19,9 +19,10 @@ type
     SSMethod: string;
     VLESSID: string;
     VLESSEncryption: string;
+    Flow: string;
     TrojanPassword: string;
     Network: TRemoteTransport;
-    EnableTLS: boolean;
+    StreamSecurity: TSecurityOptions;
     Hostname: string;
     Path: string;
     UDPHeaderType: string;
@@ -100,19 +101,23 @@ begin
       Network := GetTransportFromString(VMessJSONObj.Get('net', ''));
       case Network of
         rtKCP: UDPHeaderType := VMessJSONObj.Get('type', '');
-        rtWS, rtHTTP:
+        rtWS, rtHTTP, rtTCP:
         begin
           Hostname := VMessJSONObj.Get('host', '');
           Path := VMessJSONObj.Get('path', '');
-          EnableTLS := VMessJSONObj.Get('tls', False);
-          if not EnableTLS then
+          if VMessJSONObj.Get('tls', False) then
+            StreamSecurity := soTLS
+          else
           begin
             SI := VMessJSONObj.Get('tls', '');
             SI := SI.ToLower;
-            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
-              EnableTLS := True;
-            if not EnableTLS then
-             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
+            if SI = 'xtls' then begin
+              StreamSecurity := soXTLS;
+            end
+            else if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
+              StreamSecurity := soTLS;
+            if (StreamSecurity = soNONE) and (VMessJSONObj.Get('tls', 0) <> 0) then
+              StreamSecurity := soTLS;
           end;
         end;
         rtQUIC:
@@ -120,19 +125,6 @@ begin
           QUICSecurity := VMessJSONObj.Get('host', '');
           QUICKey := VMessJSONObj.Get('path', '');
           UDPHeaderType := VMessJSONObj.Get('type', '');
-        end;
-        rtTCP:
-        begin
-          EnableTLS := VMessJSONObj.Get('tls', False);
-          if not EnableTLS then
-          begin
-            SI := VMessJSONObj.Get('tls', '');
-            SI := SI.ToLower;
-            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
-              EnableTLS := True;
-            if not EnableTLS then
-             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
-          end;
         end;
       end;
       Result := True;
@@ -186,9 +178,9 @@ begin
   SSMethod := 'aes-128-gcm';
   VLESSID := '';
   VLESSEncryption := '';
+  Flow := '';
   TrojanPassword := '';
   Network := rtTCP;
-  EnableTLS := False;
   Hostname := '';
   Path := '';
   UDPHeaderType := 'none';
@@ -204,8 +196,8 @@ begin
   case Protocol of
     rpVMESS: C.SetVMessUser(UUID, AlterID);
     rpSHADOWSOCKS: C.SetShadowsocks(SSPassword, SSMethod);
-    rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption);
-    rpTROJAN: C.SetTrojan(TrojanPassword);
+    rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption, Flow);
+    rpTROJAN: C.SetTrojan(TrojanPassword, Flow);
   end;
   if Settings.EnableSocksProxy then
     C.SetSocksProxy(Settings.SocksProxyPort);
@@ -217,7 +209,7 @@ begin
   C.SetRoute(rlPROXY, CommaStringList(Settings.Routes[2]));
   C.SetRoute(rlDENY, CommaStringList(Settings.Routes[3]));
   if Settings.MuxEnabled then C.SetMux(Settings.MuxConcurrency);
-  C.SetTransport(Network, EnableTLS);
+  C.SetTransport(Network, StreamSecurity);
   C.SetHostPath(Hostname, Path);
   C.SetQUIC(QUICSecurity, QUICKey);
   C.SetLogLevel(Settings.V2rayLogLevel);
@@ -244,7 +236,6 @@ var
   R: TJSONObject;
 begin
   case Network of
-    rtTCP: if EnableTLS then TLSStr := 'tls';
     rtKCP:
       if UDPHeaderType <> 'none' then
         TypeStr := UDPHeaderType;
@@ -256,7 +247,7 @@ begin
         TypeStr := UDPHeaderType;
     end;
     else begin
-      if EnableTLS then TLSStr := 'tls';
+      TLSStr := SecurityOptionToString(StreamSecurity);
       HostStr := Hostname;
       PathStr := Path;
     end;
@@ -271,7 +262,7 @@ begin
         'aid', AlterID,
         'net', TransportToString(Network),
         'ps', Name]);
-      if TLSStr <> '' then R.Add('tls', TLSStr);
+      if TLSStr <> 'none' then R.Add('tls', TLSStr);
       if HostStr <> '' then R.Add('host', HostStr);
       if PathStr <> '' then R.Add('path', PathStr);
       if TypeStr <> '' then R.Add('type', TypeStr);

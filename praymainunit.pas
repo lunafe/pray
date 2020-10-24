@@ -290,6 +290,20 @@ begin
   begin
     SQLScriptInitDatabase.Execute;
     SQLTransactionPrayDB.Commit;
+    DBVersion := 2;
+  end;
+  if DBVersion = 1 then
+  begin
+    with SQLScriptInitDatabase.Script do
+    begin
+      Clear;
+      Add('ALTER TABLE `profiles` RENAME `tls_enabled` TO `stream_security`;');
+      Add('ALTER TABLE `profiles` ADD `flow` TEXT;');
+      Add('UPDATE `settings` SET `value`=''2'' WHERE `name`=''pray_dbversion'';');
+    end;
+    SQLScriptInitDatabase.Execute;
+    SQLTransactionPrayDB.Commit;
+    DBVersion := 2;
   end;
   LoadProfiles;
   ListBoxProfilesSelectionChange(nil, False);
@@ -331,8 +345,9 @@ begin
       Address := FieldByName('address').AsString;
       Port := FieldByName('port').AsInteger;
       Protocol := TRemoteProtocol(FieldByName('protocol').AsInteger);
+      Flow := FieldByName('flow').AsString;
       Network := TRemoteTransport(FieldByName('network').AsInteger);
-      EnableTLS := FieldByName('tls_enabled').AsBoolean;
+      StreamSecurity := TSecurityOptions(FieldByName('stream_security').AsInteger);
       Hostname := FieldByName('hostname').AsString;
       Path := FieldByName('path').AsString;
       UDPHeaderType := FieldByName('udp_header').AsString;
@@ -434,7 +449,8 @@ begin
         ParamByName('network').AsInteger := integer(Network);
         ParamByName('pv1').AsString := V1;
         ParamByName('pv2').AsString := V2;
-        ParamByName('tls').AsBoolean := EnableTLS;
+        ParamByName('flow').AsString := Flow;
+        ParamByName('ssec').AsInteger := integer(StreamSecurity);
         ParamByName('hostname').AsString := Hostname;
         ParamByName('path').AsString := Path;
         ParamByName('udph').AsString := UDPHeaderType;
@@ -455,7 +471,8 @@ begin
         ParamByName('network').AsInteger := integer(Network);
         ParamByName('pv1').AsString := V1;
         ParamByName('pv2').AsString := V2;
-        ParamByName('tls').AsBoolean := EnableTLS;
+        ParamByName('flow').AsString := Flow;
+        ParamByName('ssec').AsInteger := integer(StreamSecurity);
         ParamByName('hostname').AsString := Hostname;
         ParamByName('path').AsString := Path;
         ParamByName('udph').AsString := UDPHeaderType;
