@@ -9683,4 +9683,333 @@ object PrayMainWindow: TPrayMainWindow
     Left = 8
     Top = 2
   end
+  object SQLConnectorPrayDB: TSQLConnector
+    Connected = False
+    LoginPrompt = False
+    KeepConnection = False
+    Transaction = SQLTransactionPrayDB
+    ConnectorType = 'SQLite3'
+    Left = 8
+    Top = 32
+  end
+  object SQLTransactionPrayDB: TSQLTransaction
+    Active = False
+    Database = SQLConnectorPrayDB
+    Left = 8
+    Top = 64
+  end
+  object SQLScriptInitDatabase: TSQLScript
+    DataBase = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    AutoCommit = False
+    UseDollarString = False
+    Directives.Strings = (
+      'SET TERM'
+      'COMMIT WORK'
+      'COMMIT RETAIN'
+      'COMMIT'
+      '#IFDEF'
+      '#IFNDEF'
+      '#ELSE'
+      '#ENDIF'
+      '#DEFINE'
+      '#UNDEF'
+      '#UNDEFINE'
+    )
+    Script.Strings = (
+      'CREATE TABLE `settings` (`name` CHARACTER(20) PRIMARY KEY, `value` TEXT);'
+      'CREATE TABLE `profiles` ('
+      '  `id` INTEGER PRIMARY KEY AUTOINCREMENT,'
+      '  `name` TEXT,'
+      '  `address` TEXT,'
+      '  `port` INTEGER,'
+      '  `protocol` INTEGER,'
+      '  `network` INTEGER,'
+      '  `protocol_value1` TEXT,'
+      '  `protocol_value2` TEXT,'
+      '  `flow` TEXT,'
+      '  `stream_security` INTEGER DEFAULT 0,'
+      '  `hostname` TEXT,'
+      '  `path` TEXT,'
+      '  `udp_header` TEXT,'
+      '  `quic_security` TEXT,'
+      '  `quic_key` TEXT'
+      '  );'
+      'INSERT INTO `settings` VALUES(''pray_dbversion'', ''2'');'
+      'INSERT INTO `settings` VALUES(''mux_enabled'', ''0'');'
+      'INSERT INTO `settings` VALUES(''mux_concurrency'', ''16'');'
+      'INSERT INTO `settings` VALUES(''socks_enabled'', ''1'');'
+      'INSERT INTO `settings` VALUES(''socks_port'', ''61200'');'
+      'INSERT INTO `settings` VALUES(''http_enabled'', ''1'');'
+      'INSERT INTO `settings` VALUES(''http_port'', ''61208'');'
+      'INSERT INTO `settings` VALUES(''v2ray_binary'', ''v2ray.exe'');'
+      'INSERT INTO `settings` VALUES(''v2ray_assets'', ''.'');'
+      'INSERT INTO `settings` VALUES(''loglevel'', ''0'');'
+      'INSERT INTO `settings` VALUES(''dns'', ''208.67.222.222,208.67.220.220'');'
+      'INSERT INTO `settings` VALUES(''kcp_mtu'', ''1350'');'
+      'INSERT INTO `settings` VALUES(''kcp_tti'', ''20'');'
+      'INSERT INTO `settings` VALUES(''kcp_upcap'', ''5'');'
+      'INSERT INTO `settings` VALUES(''kcp_downcap'', ''100'');'
+      'INSERT INTO `settings` VALUES(''kcp_rbufsize'', ''2'');'
+      'INSERT INTO `settings` VALUES(''kcp_wbufsize'', ''2'');'
+      'INSERT INTO `settings` VALUES(''kcp_congestion'', ''1'');'
+      'INSERT INTO `settings` VALUES(''route_strategy'', ''1'');'
+      'INSERT INTO `settings` VALUES(''route_direct'', ''geosite:cn,geoip:cn,geoip:private'');'
+      'INSERT INTO `settings` VALUES(''route_proxy'', '''');'
+      'INSERT INTO `settings` VALUES(''route_reject'', '''');'
+    )
+    Terminator = ';'
+    CommentsinSQL = True
+    UseSetTerm = True
+    UseCommit = True
+    UseDefines = True
+    Left = 8
+    Top = 96
+  end
+  object SQLQueryDBVersion: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'SELECT `value` FROM `settings` WHERE `name` = :name'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'name'
+        ParamType = ptInput
+      end>
+    Left = 8
+    Top = 128
+  end
+  object SQLQueryFetchProfiles: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'SELECT `id`,`name` FROM `profiles`'
+    )
+    Params = <>
+    Left = 8
+    Top = 160
+  end
+  object SQLQueryGetProfileDetails: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'SELECT * FROM `profiles` WHERE `id`=:id;'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'id'
+        ParamType = ptInput
+      end>
+    Left = 8
+    Top = 192
+  end
+  object SQLQueryCreateProfile: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'INSERT INTO `profiles` ('
+      '    `name`, `address`, `port`,'
+      '    `protocol`, `network`, `protocol_value1`,'
+      '    `protocol_value2`, `flow`,'
+      '    `stream_security`, `hostname`, `path`,'
+      '    `udp_header`, `quic_security`, `quic_key`'
+      '    )'
+      'VALUES ('
+      '    :name, :address, :port,'
+      '    :protocol, :network, :pv1, :pv2,'
+      '    :flow, :ssec, :hostname, :path,'
+      '    :udph, :quicsec, :quickey'
+      '    );'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'name'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'address'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'port'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'protocol'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'network'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'pv1'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'pv2'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'flow'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'ssec'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'hostname'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'path'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'udph'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'quicsec'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'quickey'
+        ParamType = ptInput
+      end>
+    Left = 8
+    Top = 224
+  end
+  object SQLQueryUpdateProfile: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'UPDATE `profiles` SET'
+      '  `name`=:name, `address`=:address, `port`=:port,'
+      '  `protocol`=:protocol, `network`=:network,'
+      '  `protocol_value1`=:pv1, `protocol_value2`=:pv2,'
+      '  `flow`=:flow, `stream_security`=:ssec,'
+      '  `hostname`=:hostname, `path`=:path,'
+      '  `udp_header`=:udph, `quic_security`=:quicsec,'
+      '  `quic_key`=:quickey'
+      ' WHERE `id`=:id;'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'name'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'address'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'port'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'protocol'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'network'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'pv1'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'pv2'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'flow'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'ssec'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'hostname'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'path'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'udph'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'quicsec'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'quickey'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'id'
+        ParamType = ptInput
+      end>
+    Left = 8
+    Top = 256
+  end
+  object SQLQueryDeleteProfile: TSQLQuery
+    FieldDefs = <>
+    Database = SQLConnectorPrayDB
+    Transaction = SQLTransactionPrayDB
+    SQL.Strings = (
+      'DELETE FROM `profiles` WHERE `id`=:id;'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'id'
+        ParamType = ptInput
+      end>
+    Left = 8
+    Top = 288
+  end
 end

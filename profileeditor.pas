@@ -14,12 +14,15 @@ type
 
   TFormEditProfile = class(TForm)
     ButtonSave: TButton;
+    CheckBoxXTLS: TCheckBox;
     CheckBoxEnableTLS: TCheckBox;
+    ComboBoxFlow: TComboBox;
     ComboBoxMethod: TComboBox;
     ComboBoxProtocol: TComboBox;
     ComboBoxQUICSecurity: TComboBox;
     ComboBoxNetwork: TComboBox;
     ComboBoxUDPHeaderType: TComboBox;
+    EditTrojanPassword: TEdit;
     EditVLESSUUID: TEdit;
     EditVLESSEncryption: TEdit;
     EditPassword: TEdit;
@@ -32,6 +35,8 @@ type
     GroupBoxGeneral: TGroupBox;
     GroupBoxStream: TGroupBox;
     GroupBoxUser: TGroupBox;
+    LabelFlow: TLabel;
+    LabelTrojanPassword: TLabel;
     LabelVLESSUUID: TLabel;
     LabelVLESSEncryption: TLabel;
     LabelMethod: TLabel;
@@ -51,11 +56,14 @@ type
     PageControlProtocolSwitch: TPageControl;
     SpinEditPort: TSpinEdit;
     SpinEditAlterID: TSpinEdit;
+    TabSheetTrojanConfig: TTabSheet;
     TabSheetVLESSConfig: TTabSheet;
     TabSheetShadowsocksConfig: TTabSheet;
     TabSheetVMessConfig: TTabSheet;
     procedure ButtonSaveClick(Sender: TObject);
     procedure ApplyProfile(Profile: TProfile);
+    procedure CheckBoxEnableTLSChange(Sender: TObject);
+    procedure CheckBoxXTLSChange(Sender: TObject);
     procedure ComboBoxNetworkChange(Sender: TObject);
     procedure ComboBoxProtocolChange(Sender: TObject);
     procedure ComboBoxQUICSecurityChange(Sender: TObject);
@@ -63,6 +71,8 @@ type
     SaveAfterExit: boolean;
   private
     ProfileObj: TProfile;
+    procedure TiggerXTLS(XTLSEnabled: boolean);
+    procedure AllowXTLS(Allowed: boolean);
     procedure TiggerUDP(FieldsEnabled: boolean);
     procedure TiggerQUIC(FieldsEnabled: boolean);
     procedure TiggerHostPath(FieldsEnabled: boolean);
@@ -79,51 +89,112 @@ implementation
 
 procedure TFormEditProfile.ButtonSaveClick(Sender: TObject);
 begin
-  ProfileObj.Name := EditProfileName.Text;
-  ProfileObj.Address := EditAddress.Text;
-  ProfileObj.Port := SpinEditPort.Value;
-  ProfileObj.Protocol := TRemoteProtocol(ComboBoxProtocol.ItemIndex);
-  ProfileObj.UUID := EditUUID.Text;
-  ProfileObj.AlterID := SpinEditAlterID.Value;
-  ProfileObj.SSPassword := EditPassword.Text;
-  ProfileObj.SSMethod := TShadowsocksEncryption(ComboBoxMethod.ItemIndex);
-  ProfileObj.VLESSID := EditVLESSUUID.Text;
-  ProfileObj.VLESSEncryption := EditVLESSEncryption.Text;
-  ProfileObj.Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
-  ProfileObj.EnableTLS := CheckBoxEnableTLS.Checked;
-  ProfileObj.Hostname := EditHostname.Text;
-  ProfileObj.Path := EditPath.Text;
-  ProfileObj.UDPHeaderType := TUDPHeaderType(ComboBoxUDPHeaderType.ItemIndex);
-  ProfileObj.QUICSecurity := TQUICSecurity(ComboBoxQUICSecurity.ItemIndex);
-  ProfileObj.QUICKey := EditQUICKey.Text;
+  with ProfileObj do begin
+    Name := EditProfileName.Text;
+    Address := EditAddress.Text;
+    Port := SpinEditPort.Value;
+    Protocol := TRemoteProtocol(ComboBoxProtocol.ItemIndex);
+    Flow := ComboBoxFlow.Text;
+    UUID := EditUUID.Text;
+    AlterID := SpinEditAlterID.Value;
+    SSPassword := EditPassword.Text;
+    SSMethod := ComboBoxMethod.Text;
+    VLESSID := EditVLESSUUID.Text;
+    VLESSEncryption := EditVLESSEncryption.Text;
+    TrojanPassword := EditTrojanPassword.Text;
+    Network := TRemoteTransport(ComboBoxNetwork.ItemIndex);
+    if CheckBoxXTLS.Checked then
+      StreamSecurity := soXTLS
+    else if CheckBoxEnableTLS.Checked then
+      StreamSecurity := soTLS
+    else
+      StreamSecurity := soNONE;
+    Hostname := EditHostname.Text;
+    Path := EditPath.Text;
+    UDPHeaderType := ComboBoxUDPHeaderType.Text;
+    QUICSecurity := ComboBoxQUICSecurity.Text;
+    QUICKey := EditQUICKey.Text;
+  end;
   SaveAfterExit := True;
   FormEditProfile.Close;
 end;
 
 procedure TFormEditProfile.ApplyProfile(Profile: TProfile);
 begin
-  EditProfileName.Text := Profile.Name;
-  EditAddress.Text := Profile.Address;
-  SpinEditPort.Value := Profile.Port;
-  ComboBoxProtocol.ItemIndex := integer(Profile.Protocol);
-  EditUUID.Text := Profile.UUID;
-  SpinEditAlterID.Value := Profile.AlterID;
-  EditPassword.Text := Profile.SSPassword;
-  EditVLESSUUID.Text := Profile.VLESSID;
-  if Profile.Protocol = rpVLESS then
-    EditVLESSEncryption.Text := Profile.VLESSEncryption;
-  ComboBoxMethod.ItemIndex := integer(Profile.SSMethod);
-  ComboBoxNetwork.ItemIndex := integer(Profile.Network);
-  CheckBoxEnableTLS.Checked := Profile.EnableTLS;
-  EditHostname.Text := Profile.Hostname;
-  EditPath.Text := Profile.Path;
-  ComboBoxUDPHeaderType.ItemIndex := integer(Profile.UDPHeaderType);
-  ComboBoxQUICSecurity.ItemIndex := integer(Profile.QUICSecurity);
-  EditQUICKey.Text := Profile.QUICKey;
+  with Profile do begin
+    EditProfileName.Text := Profile.Name;
+    EditAddress.Text := Address;
+    SpinEditPort.Value := Port;
+    ComboBoxProtocol.ItemIndex := integer(Protocol);
+    EditUUID.Text := UUID;
+    SpinEditAlterID.Value := AlterID;
+    EditPassword.Text := SSPassword;
+    EditVLESSUUID.Text := VLESSID;
+    EditTrojanPassword.Text := TrojanPassword;
+    ComboBoxFlow.Text := Flow;
+    if StreamSecurity = soTLS then CheckBoxEnableTLS.Checked := True;
+    if Protocol <> rpVLESS then EditVLESSEncryption.Text := 'none';
+    AllowXTLS(True);
+    TiggerXTLS(StreamSecurity = soXTLS);
+    case Protocol of
+      rpVLESS: begin
+        EditVLESSEncryption.Text := VLESSEncryption;
+        if StreamSecurity = soXTLS then TiggerXTLS(True);
+      end;
+      rpTROJAN: ;
+      else begin
+        AllowXTLS(False);
+      end;
+    end;
+    ComboBoxMethod.Text := SSMethod;
+    ComboBoxNetwork.ItemIndex := integer(Network);
+    EditHostname.Text := Hostname;
+    EditPath.Text := Path;
+    ComboBoxUDPHeaderType.Text := UDPHeaderType;
+    ComboBoxQUICSecurity.Text := QUICSecurity;
+    EditQUICKey.Text := QUICKey;
+  end;
   ProfileObj := Profile;
   ComboBoxProtocolChange(nil);
   ComboBoxNetworkChange(nil);
   SaveAfterExit := False;
+end;
+
+procedure TFormEditProfile.CheckBoxEnableTLSChange(Sender: TObject);
+begin
+  TiggerHostPath(LabelPath.Enabled);
+end;
+
+procedure TFormEditProfile.CheckBoxXTLSChange(Sender: TObject);
+begin
+  TiggerXTLS(CheckBoxXTLS.Checked);
+end;
+
+procedure TFormEditProfile.AllowXTLS(Allowed: boolean);
+begin
+  if Allowed then begin
+    CheckBoxXTLS.Enabled := True;
+    TiggerXTLS(CheckBoxXTLS.Checked);
+  end
+  else begin
+    CheckBoxXTLS.Enabled := False;
+    CheckBoxXTLS.Checked := False;
+    TiggerXTLS(False);
+  end;
+end;
+
+procedure TFormEditProfile.TiggerXTLS(XTLSEnabled: boolean);
+begin
+  CheckBoxXTLS.Checked := XTLSEnabled;
+  LabelFlow.Enabled := XTLSEnabled;
+  ComboBoxFlow.Enabled := XTLSEnabled;
+  CheckBoxEnableTLS.Enabled := not XTLSEnabled;
+  ComboBoxNetwork.Enabled := not XTLSEnabled;
+  if XTLSEnabled then begin
+    ComboBoxNetwork.ItemIndex := 0;
+    CheckBoxEnableTLS.Checked := True;
+    TiggerHostPath(False);
+  end;
 end;
 
 procedure TFormEditProfile.TiggerUDP(FieldsEnabled: boolean);
@@ -150,9 +221,9 @@ end;
 
 procedure TFormEditProfile.TiggerHostPath(FieldsEnabled: boolean);
 begin
-  LabelHostname.Enabled := FieldsEnabled;
+  LabelHostname.Enabled := FieldsEnabled or CheckBoxEnableTLS.Checked;
+  EditHostname.Enabled := FieldsEnabled or CheckBoxEnableTLS.Checked;
   LabelPath.Enabled := FieldsEnabled;
-  EditHostname.Enabled := FieldsEnabled;
   EditPath.Enabled := FieldsEnabled;
 end;
 
@@ -200,6 +271,10 @@ end;
 procedure TFormEditProfile.ComboBoxProtocolChange(Sender: TObject);
 begin
   PageControlProtocolSwitch.PageIndex := ComboBoxProtocol.ItemIndex;
+  case ComboBoxProtocol.ItemIndex of
+    0, 1: AllowXTLS(False);
+    else AllowXTLS(True);
+  end;
 end;
 
 procedure TFormEditProfile.ComboBoxQUICSecurityChange(Sender: TObject);

@@ -462,4 +462,36 @@ object FormGlobalSettings: TFormGlobalSettings
     Left = 40
     Top = 272
   end
+  object SQLQueryReadSettings: TSQLQuery
+    FieldDefs = <>
+    Database = PrayMainWindow.SQLConnectorPrayDB
+    Transaction = PrayMainWindow.SQLTransactionPrayDB
+    SQL.Strings = (
+      'SELECT * FROM `settings`'
+    )
+    Params = <>
+    Left = 72
+    Top = 272
+  end
+  object SQLQueryUpdateSettings: TSQLQuery
+    FieldDefs = <>
+    Database = PrayMainWindow.SQLConnectorPrayDB
+    Transaction = PrayMainWindow.SQLTransactionPrayDB
+    SQL.Strings = (
+      'UPDATE `settings` SET `value` = :value WHERE `name` = :name'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'value'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'name'
+        ParamType = ptInput
+      end>
+    Left = 104
+    Top = 272
+  end
 end

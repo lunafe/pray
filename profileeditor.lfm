@@ -1,13 +1,13 @@
 object FormEditProfile: TFormEditProfile
   Left = 0
-  Height = 423
+  Height = 458
   Top = 0
   Width = 346
   Anchors = [akRight, akBottom]
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Edit profile'
-  ClientHeight = 423
+  ClientHeight = 458
   ClientWidth = 346
   Color = clWindow
   Position = poMainFormCenter
@@ -75,11 +75,11 @@ object FormEditProfile: TFormEditProfile
   end
   object GroupBoxUser: TGroupBox
     Left = 9
-    Height = 112
+    Height = 136
     Top = 104
     Width = 328
     Caption = 'User'
-    ClientHeight = 92
+    ClientHeight = 116
     ClientWidth = 324
     ParentColor = False
     TabOrder = 1
@@ -94,6 +94,7 @@ object FormEditProfile: TFormEditProfile
         'VMess'
         'Shadowsocks'
         'VLESS'
+        'Trojan'
       )
       OnChange = ComboBoxProtocolChange
       Style = csDropDownList
@@ -110,17 +111,17 @@ object FormEditProfile: TFormEditProfile
     end
     object PageControlProtocolSwitch: TPageControl
       Left = -2
-      Height = 71
+      Height = 64
       Top = 24
       Width = 330
-      ActivePage = TabSheetVMessConfig
+      ActivePage = TabSheetVLESSConfig
       Anchors = [akTop, akLeft, akRight]
       ShowTabs = False
-      TabIndex = 0
+      TabIndex = 2
       TabOrder = 1
       object TabSheetVMessConfig: TTabSheet
         Caption = 'VMess'
-        ClientHeight = 63
+        ClientHeight = 133
         ClientWidth = 322
         object SpinEditAlterID: TSpinEdit
           Left = 241
@@ -207,7 +208,7 @@ object FormEditProfile: TFormEditProfile
       end
       object TabSheetVLESSConfig: TTabSheet
         Caption = 'VLESS'
-        ClientHeight = 63
+        ClientHeight = 56
         ClientWidth = 322
         object LabelVLESSUUID: TLabel
           Left = 8
@@ -241,12 +242,66 @@ object FormEditProfile: TFormEditProfile
           Text = 'none'
         end
       end
+      object TabSheetTrojanConfig: TTabSheet
+        Caption = 'Trojan'
+        ClientHeight = 63
+        ClientWidth = 322
+        object LabelTrojanPassword: TLabel
+          Left = 10
+          Height = 15
+          Top = 8
+          Width = 53
+          Caption = 'Password:'
+          ParentColor = False
+        end
+        object EditTrojanPassword: TEdit
+          Left = 154
+          Height = 23
+          Top = 4
+          Width = 160
+          TabOrder = 0
+        end
+      end
+    end
+    object CheckBoxXTLS: TCheckBox
+      Left = 8
+      Height = 19
+      Top = 94
+      Width = 45
+      Caption = 'XTLS'
+      OnChange = CheckBoxXTLSChange
+      TabOrder = 2
+    end
+    object LabelFlow: TLabel
+      Left = 112
+      Height = 15
+      Top = 94
+      Width = 28
+      Caption = 'Flow:'
+      Enabled = False
+      ParentColor = False
+    end
+    object ComboBoxFlow: TComboBox
+      Left = 160
+      Height = 23
+      Top = 90
+      Width = 148
+      Enabled = False
+      ItemHeight = 15
+      Items.Strings = (
+        ''
+        'xtls-rprx-origin'
+        'xtls-rprx-origin-udp443'
+        'xtls-rprx-direct'
+        'xtls-rprx-direct-udp443'
+      )
+      TabOrder = 3
     end
   end
   object GroupBoxStream: TGroupBox
-    Left = 9
+    Left = 8
     Height = 168
-    Top = 216
+    Top = 248
     Width = 329
     Caption = 'Stream'
     ClientHeight = 148
@@ -319,6 +374,7 @@ object FormEditProfile: TFormEditProfile
       Width = 38
       Anchors = [akTop, akRight]
       Caption = 'TLS'
+      OnChange = CheckBoxEnableTLSChange
       TabOrder = 1
     end
     object LabelUDPHeaderType: TLabel
@@ -391,9 +447,9 @@ object FormEditProfile: TFormEditProfile
     end
   end
   object ButtonSave: TButton
-    Left = 262
+    Left = 256
     Height = 25
-    Top = 392
+    Top = 424
     Width = 75
     Caption = 'Save'
     OnClick = ButtonSaveClick

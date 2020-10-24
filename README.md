@@ -14,6 +14,5 @@ Small, fast and no dependency.
 
 - Import and export;
 - Subscription support;
-- QR Code;
 - Fix bugs;
 - And MORE.

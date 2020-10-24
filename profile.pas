@@ -16,15 +16,17 @@ type
     UUID: string;
     AlterID: word;
     SSPassword: string;
-    SSMethod: TShadowsocksEncryption;
+    SSMethod: string;
     VLESSID: string;
     VLESSEncryption: string;
+    Flow: string;
+    TrojanPassword: string;
     Network: TRemoteTransport;
-    EnableTLS: boolean;
+    StreamSecurity: TSecurityOptions;
     Hostname: string;
     Path: string;
-    UDPHeaderType: TUDPHeaderType;
-    QUICSecurity: TQUICSecurity;
+    UDPHeaderType: string;
+    QUICSecurity: string;
     QUICKey: string;
     constructor Create;
     function CreateJSON(Settings: TProgramSettings): TJSONObject;
@@ -98,40 +100,31 @@ begin
       end;
       Network := GetTransportFromString(VMessJSONObj.Get('net', ''));
       case Network of
-        rtKCP: UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
-        rtWS, rtHTTP:
+        rtKCP: UDPHeaderType := VMessJSONObj.Get('type', '');
+        rtWS, rtHTTP, rtTCP:
         begin
           Hostname := VMessJSONObj.Get('host', '');
           Path := VMessJSONObj.Get('path', '');
-          EnableTLS := VMessJSONObj.Get('tls', False);
-          if not EnableTLS then
+          if VMessJSONObj.Get('tls', False) then
+            StreamSecurity := soTLS
+          else
           begin
             SI := VMessJSONObj.Get('tls', '');
             SI := SI.ToLower;
-            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
-              EnableTLS := True;
-            if not EnableTLS then
-             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
+            if SI = 'xtls' then begin
+              StreamSecurity := soXTLS;
+            end
+            else if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
+              StreamSecurity := soTLS;
+            if (StreamSecurity = soNONE) and (VMessJSONObj.Get('tls', 0) <> 0) then
+              StreamSecurity := soTLS;
           end;
         end;
         rtQUIC:
         begin
-          QUICSecurity := GetQUICSecurityFromString(VMessJSONObj.Get('host', ''));
+          QUICSecurity := VMessJSONObj.Get('host', '');
           QUICKey := VMessJSONObj.Get('path', '');
-          UDPHeaderType := GetUDPHeaderTypeFromString(VMessJSONObj.Get('type', ''));
-        end;
-        rtTCP:
-        begin
-          EnableTLS := VMessJSONObj.Get('tls', False);
-          if not EnableTLS then
-          begin
-            SI := VMessJSONObj.Get('tls', '');
-            SI := SI.ToLower;
-            if (SI <> 'none') and (SI <> 'false') and (SI <> '0') and (SI <> '') then
-              EnableTLS := True;
-            if not EnableTLS then
-             if VMessJSONObj.Get('tls', 0) <> 0 then EnableTLS := True;
-          end;
+          UDPHeaderType := VMessJSONObj.Get('type', '');
         end;
       end;
       Result := True;
@@ -160,10 +153,10 @@ begin
       if SSName = '' then
         LinkProfile.Name := Format('SS<%s:%d>', [LinkProfile.Address, LinkProfile.Port])
       else LinkProfile.Name := SSName;
-      LinkProfile.SSMethod := GetSSEncMethodFromString(R.Match[1]);
+      LinkProfile.SSMethod := R.Match[1];
       LinkProfile.SSPassword := R.Match[2];
-      if LinkProfile.SSMethod = seUNSUPPORTED then Result := False
-      else Result := True;
+      //if LinkProfile.SSMethod = seUNSUPPORTED then Result := False
+      //else Result := True;
     end
     else Result := False;
   end
@@ -182,15 +175,16 @@ begin
   UUID := '';
   AlterID := 64;
   SSPassword := '';
-  SSMethod := seAES128GCM;
+  SSMethod := 'aes-128-gcm';
   VLESSID := '';
   VLESSEncryption := '';
+  Flow := '';
+  TrojanPassword := '';
   Network := rtTCP;
-  EnableTLS := False;
   Hostname := '';
   Path := '';
-  UDPHeaderType := uhNONE;
-  QUICSecurity := qsNONE;
+  UDPHeaderType := 'none';
+  QUICSecurity := 'none';
   QUICKey := '';
 end;
 
@@ -202,7 +196,8 @@ begin
   case Protocol of
     rpVMESS: C.SetVMessUser(UUID, AlterID);
     rpSHADOWSOCKS: C.SetShadowsocks(SSPassword, SSMethod);
-    rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption);
+    rpVLESS: C.SetVLESS(VLESSID, VLESSEncryption, Flow);
+    rpTROJAN: C.SetTrojan(TrojanPassword, Flow);
   end;
   if Settings.EnableSocksProxy then
     C.SetSocksProxy(Settings.SocksProxyPort);
@@ -214,7 +209,7 @@ begin
   C.SetRoute(rlPROXY, CommaStringList(Settings.Routes[2]));
   C.SetRoute(rlDENY, CommaStringList(Settings.Routes[3]));
   if Settings.MuxEnabled then C.SetMux(Settings.MuxConcurrency);
-  C.SetTransport(Network, EnableTLS);
+  C.SetTransport(Network, StreamSecurity);
   C.SetHostPath(Hostname, Path);
   C.SetQUIC(QUICSecurity, QUICKey);
   C.SetLogLevel(Settings.V2rayLogLevel);
@@ -241,19 +236,18 @@ var
   R: TJSONObject;
 begin
   case Network of
-    rtTCP: if EnableTLS then TLSStr := 'tls';
     rtKCP:
-      if UDPHeaderType <> uhNONE then
-        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+      if UDPHeaderType <> 'none' then
+        TypeStr := UDPHeaderType;
     rtQUIC: begin
-      HostStr := QUICSecurityToString(QUICSecurity);
-      if QUICSecurity <> qsNONE then
+      HostStr := QUICSecurity;
+      if QUICSecurity <> 'none' then
         PathStr := QUICKey;
-      if UDPHeaderType <> uhNONE then
-        TypeStr := UDPHeaderTypeToString(UDPHeaderType);
+      if UDPHeaderType <> 'none' then
+        TypeStr := UDPHeaderType;
     end;
     else begin
-      if EnableTLS then TLSStr := 'tls';
+      TLSStr := SecurityOptionToString(StreamSecurity);
       HostStr := Hostname;
       PathStr := Path;
     end;
@@ -268,7 +262,7 @@ begin
         'aid', AlterID,
         'net', TransportToString(Network),
         'ps', Name]);
-      if TLSStr <> '' then R.Add('tls', TLSStr);
+      if TLSStr <> 'none' then R.Add('tls', TLSStr);
       if HostStr <> '' then R.Add('host', HostStr);
       if PathStr <> '' then R.Add('path', PathStr);
       if TypeStr <> '' then R.Add('type', TypeStr);
@@ -276,9 +270,7 @@ begin
     end;
     rpSHADOWSOCKS:
       Result := 'ss://' + EncodeStringBase64(Format('%s:%s@%s:%d', [
-        ShadowsocksEncMethodToString(SSMethod),
-        SSPassword,
-        Address, Port]));
+        SSMethod, SSPassword, Address, Port]));
     else Result := '';
   end;
 end;

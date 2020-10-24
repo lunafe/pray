@@ -5,11 +5,12 @@ unit PrayMainUnit;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  Buttons, ComCtrls, FPJson, Process, Profile, V2rayJsonConfig;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, FGL,
+  Buttons, ComCtrls, FPJson, Process, SQLDB, SQLite3Conn, Profile,
+  V2rayJsonConfig;
 
 type
-
+  TIntegerList = specialize TFPGList<Integer>;
   TV2rayWatchThread = class(TThread)
     constructor Create(CreateSuspended: boolean; V2rayProcess: TProcess; AProfileName: string = '');
   protected
@@ -38,6 +39,15 @@ type
     MemoV2rayOutput: TMemo;
     MemoServerInfo: TMemo;
     PanelMainPanel: TPanel;
+    SQLConnectorPrayDB: TSQLConnector;
+    SQLQueryDeleteProfile: TSQLQuery;
+    SQLQueryUpdateProfile: TSQLQuery;
+    SQLQueryCreateProfile: TSQLQuery;
+    SQLQueryGetProfileDetails: TSQLQuery;
+    SQLQueryFetchProfiles: TSQLQuery;
+    SQLQueryDBVersion: TSQLQuery;
+    SQLScriptInitDatabase: TSQLScript;
+    SQLTransactionPrayDB: TSQLTransaction;
     StatusBarConnectionStatus: TStatusBar;
     TrayIconRunningIcon: TTrayIcon;
     procedure BitBtnConnectClick(Sender: TObject);
@@ -53,21 +63,23 @@ type
     procedure FormWindowStateChange(Sender: TObject);
     procedure ListBoxProfilesSelectionChange(Sender: TObject; User: boolean);
     procedure LoadProfiles;
-    procedure SaveProfiles;
+    procedure SaveProfile(Profile: TProfile; ProfileID: integer = 0);
     procedure TrayIconRunningIconClick(Sender: TObject);
   private
     V2RayProcess: TProcess;
     V2Thread: TV2rayWatchThread;
+    CurrentProfile: TProfile;
     procedure IfProfileSelect(ASelected: boolean);
   end;
 
 var
-  ProfileList: TList;
+  ProfileIDList: TIntegerList;
   PrayMainWindow: TPrayMainWindow;
   ApplicationRootDirectory: string;
   TemporaryDirectory: string;
   ProfileJsonPath: string;
   GeneratedJsonPath: string;
+  DatabaseFilePath: string;
 
 implementation
 
@@ -139,25 +151,21 @@ begin
   FormEditProfile.ShowModal;
   if FormEditProfile.SaveAfterExit then
   begin
-    ProfileList.Add(P);
-    ListBoxProfiles.Items.Add(P.Name);
-    ListBoxProfilesSelectionChange(nil, False);
-    SaveProfiles;
+    SaveProfile(P);
+    LoadProfiles;
   end;
 end;
 
 procedure TPrayMainWindow.BitBtnConnectClick(Sender: TObject);
 var
   F: TFileStream;
-  P: TProfile;
   S: string;
   I: integer;
 begin
   if ListBoxProfiles.ItemIndex <> -1 then
   begin
     F := TFileStream.Create(GeneratedJsonPath, fmCreate);
-    P := TProfile(ProfileList[ListBoxProfiles.ItemIndex]);
-    S := P.CreateJSON(Settings).FormatJSON;
+    S := CurrentProfile.CreateJSON(Settings).FormatJSON;
     F.WriteBuffer(Pointer(S)^, Length(S));
     F.Free;
     BitBtnDisconnectClick(nil);
@@ -176,7 +184,7 @@ begin
       Options := [poNoConsole, poStderrToOutPut, poUsePipes];
       Execute;
     end;
-    V2Thread := TV2rayWatchThread.Create(True, V2RayProcess, P.Name);
+    V2Thread := TV2rayWatchThread.Create(True, V2RayProcess, CurrentProfile.Name);
     V2Thread.Start;
   end;
 end;
@@ -199,20 +207,17 @@ begin
 end;
 
 procedure TPrayMainWindow.ButtonEditProfileClick(Sender: TObject);
-var
-  P: TProfile;
 begin
   if ListBoxProfiles.ItemIndex <> -1 then
   begin
-    P := TProfile(ProfileList[ListBoxProfiles.ItemIndex]);
-    FormEditProfile.ApplyProfile(P);
+    FormEditProfile.ApplyProfile(CurrentProfile);
     FormEditProfile.ShowModal;
     if FormEditProfile.SaveAfterExit then
     begin
-      ListBoxProfiles.Items[ListBoxProfiles.ItemIndex] := P.Name;
-      ListBoxProfilesSelectionChange(nil, False);
-      SaveProfiles;
+      SaveProfile(CurrentProfile, ProfileIDList[ListBoxProfiles.ItemIndex]);
+      ListBoxProfiles.Items[ListBoxProfiles.ItemIndex] := CurrentProfile.Name;
     end;
+    ListBoxProfilesSelectionChange(nil, False);
   end;
 end;
 
@@ -231,13 +236,8 @@ begin
     ShowModal;
     if SaveAfterExit then
     begin
-      for P in ReadyProfileList do
-      begin
-        ProfileList.Add(P);
-        ListBoxProfiles.Items.Add(TProfile(P).Name);
-      end;
-      ListBoxProfilesSelectionChange(nil, False);
-      SaveProfiles;
+      for P in ReadyProfileList do SaveProfile(TProfile(P));
+      LoadProfiles;
     end;
   end;
 end;
@@ -250,10 +250,15 @@ begin
   if I <> -1 then
   begin
     ListBoxProfiles.DeleteSelected;
-    TProfile(ProfileList[I]).Free;
-    ProfileList.Delete(I);
+    with SQLQueryDeleteProfile do
+    begin
+      ParamByName('id').AsInteger := ProfileIDList[I];
+      ExecSQL;
+    end;
+    ProfileIDList.Delete(I);
+    SQLTransactionPrayDB.Commit;
+    LoadProfiles;
     ListBoxProfilesSelectionChange(nil, False);
-    SaveProfiles;
   end;
 end;
 
@@ -261,16 +266,46 @@ procedure TPrayMainWindow.ButtonShareLinkClick(Sender: TObject);
 begin
   if ListBoxProfiles.ItemIndex <> -1 then
   begin
-    FormShareLink.ApplyProfile(TProfile(ProfileList[ListBoxProfiles.ItemIndex]));
+    FormShareLink.ApplyProfile(CurrentProfile);
     FormShareLink.Show;
   end;
 end;
 
 procedure TPrayMainWindow.FormCreate(Sender: TObject);
+var
+  DBVersion: integer;
 begin
-  ProfileList := TList.Create;
-  if FileExists(ProfileJsonPath) then
-    LoadProfiles;
+  DBVersion := 0;
+  ProfileIDList := TIntegerList.Create;
+  SQLConnectorPrayDB.DatabaseName := DatabaseFilePath;
+  try
+    SQLQueryDBVersion.ParamByName('name').AsString := 'pray_dbversion';
+    SQLQueryDBVersion.Open;
+    DBVersion := SQLQueryDBVersion.FieldByName('value').AsString.ToInteger;
+  except
+    on E: Exception do
+      SQLQueryDBVersion.Close;
+  end;
+  if DBVersion = 0 then
+  begin
+    SQLScriptInitDatabase.Execute;
+    SQLTransactionPrayDB.Commit;
+    DBVersion := 2;
+  end;
+  if DBVersion = 1 then
+  begin
+    with SQLScriptInitDatabase.Script do
+    begin
+      Clear;
+      Add('ALTER TABLE `profiles` RENAME `tls_enabled` TO `stream_security`;');
+      Add('ALTER TABLE `profiles` ADD `flow` TEXT;');
+      Add('UPDATE `settings` SET `value`=''2'' WHERE `name`=''pray_dbversion'';');
+    end;
+    SQLScriptInitDatabase.Execute;
+    SQLTransactionPrayDB.Commit;
+    DBVersion := 2;
+  end;
+  LoadProfiles;
   ListBoxProfilesSelectionChange(nil, False);
 end;
 
@@ -291,23 +326,62 @@ end;
 procedure TPrayMainWindow.IfProfileSelect(ASelected: boolean);
 var
   I: integer;
-  P: TProfile;
+  V1, V2: string;
 begin
   ButtonEditProfile.Enabled := ASelected;
   ButtonRemoveProfile.Enabled := ASelected;
   ButtonShareLink.Enabled := ASelected;
   BitBtnConnect.Enabled := ASelected;
   MemoServerInfo.Lines.Clear;
-  if ASelected then
+  if ASelected then with SQLQueryGetProfileDetails do
   begin
-    I := ListBoxProfiles.ItemIndex;
-    P := TProfile(ProfileList[I]);
-    with MemoServerInfo.Lines do
+    I := ProfileIDList[ListBoxProfiles.ItemIndex];
+    CurrentProfile := TProfile.Create;
+    ParamByName('id').AsInteger := I;
+    Open;
+    with CurrentProfile do
     begin
-      Add(Format('Remote: %s:%d', [P.Address, P.Port]));
-      Add(Format('Protocol: %s', [RemoteProtocolToString(P.Protocol)]));
-      Add(Format('Network: %s', [TransportToString(P.Network)]));
+      Name := FieldByName('name').AsString;
+      Address := FieldByName('address').AsString;
+      Port := FieldByName('port').AsInteger;
+      Protocol := TRemoteProtocol(FieldByName('protocol').AsInteger);
+      Flow := FieldByName('flow').AsString;
+      Network := TRemoteTransport(FieldByName('network').AsInteger);
+      StreamSecurity := TSecurityOptions(FieldByName('stream_security').AsInteger);
+      Hostname := FieldByName('hostname').AsString;
+      Path := FieldByName('path').AsString;
+      UDPHeaderType := FieldByName('udp_header').AsString;
+      QUICSecurity := FieldByName('quic_security').AsString;
+      QUICKey := FieldByName('quic_key').AsString;
+      V1 := FieldByName('protocol_value1').AsString;
+      V2 := FieldByName('protocol_value2').AsString;
+      case Protocol of
+        rpVMESS:
+          begin
+            UUID := V1;
+            AlterID := V2.ToInteger;
+          end;
+        rpSHADOWSOCKS:
+          begin
+            SSPassword := V1;
+            SSMethod := V2;
+          end;
+        rpVLESS:
+          begin
+            VLESSID := V1;
+            VLESSEncryption := V2;
+          end;
+        rpTROJAN:
+          TrojanPassword := V1;
+      end;
+      with MemoServerInfo.Lines do
+      begin
+        Add(Format('Remote: %s:%d', [Address, Port]));
+        Add(Format('Protocol: %s', [RemoteProtocolToString(Protocol)]));
+        Add(Format('Network: %s', [TransportToString(Network)]));
+      end;
     end;
+    Close;
   end;
 end;
 
@@ -320,108 +394,95 @@ begin
 end;
 
 procedure TPrayMainWindow.LoadProfiles;
-var
-  F: TFileStream;
-  S: string;
-  J: TJSONArray;
-  I: TJSONEnum;
-  K: TJSONObject;
-  P: TProfile;
 begin
-  F := TFileStream.Create(ProfileJsonPath, fmOpenRead);
-  SetLength(S, F.Size);
-  F.ReadBuffer(Pointer(S)^, Length(S));
-  F.Free;
-  J := TJSONArray(GetJSON(S));
   ListBoxProfiles.Items.Clear;
-  ProfileList.Clear;
-  for I in J do
+  ProfileIDList.Clear;
+  with SQLQueryFetchProfiles do
   begin
-    P := TProfile.Create;
-    K := TJSONObject(I.Value);
-    P.Name := K.Get('name', 'Unamed');
-    P.Address := K.Get('addr', '0.0.0.0');
-    P.Port := K.Get('port', 0);
-    P.Protocol := TRemoteProtocol(K.Get('pc', 0));
-    case P.Protocol of
-      rpVMESS: begin
-        P.UUID := K.Get('s0', '');
-        P.AlterID := K.Get('i0', 0);
-      end;
-      rpSHADOWSOCKS: begin
-        P.SSPassword := K.Get('s0', '');
-        P.SSMethod := TShadowsocksEncryption(K.Get('i0', 2));
-      end;
-      rpVLESS: begin
-        P.VLESSID := K.Get('s0', '');
-        P.VLESSEncryption := K.Get('s1', 'none');
-      end;
+    Open;
+    while not EOF do
+    begin
+      ListBoxProfiles.Items.Add(FieldByName('name').AsString);
+      ProfileIDList.Add(FieldByName('id').AsInteger);
+      Next;
     end;
-    P.Network := TRemoteTransport(K.Get('net', 0));
-    P.EnableTLS := K.Get('tls', False);
-    P.Hostname := K.Get('host', '');
-    P.Path := K.Get('path', '');
-    P.UDPHeaderType := TUDPHeaderType(K.Get('udph', 0));
-    P.QUICSecurity := TQUICSecurity(K.Get('qs', 0));
-    P.QUICKey := K.Get('qk', '');
-    ListBoxProfiles.Items.Add(P.Name);
-    ProfileList.Add(P);
+    Close;
   end;
 end;
 
-procedure TPrayMainWindow.SaveProfiles;
+procedure TPrayMainWindow.SaveProfile(Profile: TProfile; ProfileID: integer = 0);
 var
-  F: TFileStream;
-  J: TJSONArray;
-  I: Pointer;
-  P: TProfile;
-  S: string;
-  PS0: string;
-  PS1: string;
-  PI0: Word;
+  V1, V2: string;
 begin
-  F := TFileStream.Create(ProfileJsonPath, fmCreate);
-  J := TJSONArray.Create();
-  for I in ProfileList do
+  with Profile do
   begin
-    P := TProfile(I);
-    PS0 := '';
-    PS1 := '';
-    PI0 := 0;
-    case P.Protocol of
-      rpVMESS: begin
-        PS0 := P.UUID;
-        PI0 := P.AlterID;
+    case Protocol of
+      rpVMESS:
+        begin
+          V1 := UUID;
+          V2 := AlterID.ToString;
+        end;
+      rpSHADOWSOCKS:
+        begin
+          V1 := SSPassword;
+          V2 := SSMethod;
+        end;
+      rpVLESS:
+        begin
+          V1 := VLESSID;
+          V2 := VLESSEncryption;
+        end;
+      rpTROJAN:
+        begin
+          V1 := TrojanPassword;
+          V2 := ''
+        end;
+    end;
+    if ProfileID < 1 then
+    begin
+      with SQLQueryCreateProfile do
+      begin
+        ParamByName('name').AsString := Profile.Name;
+        ParamByName('address').AsString := Address;
+        ParamByName('port').AsInteger := Port;
+        ParamByName('protocol').AsInteger := integer(Protocol);
+        ParamByName('network').AsInteger := integer(Network);
+        ParamByName('pv1').AsString := V1;
+        ParamByName('pv2').AsString := V2;
+        ParamByName('flow').AsString := Flow;
+        ParamByName('ssec').AsInteger := integer(StreamSecurity);
+        ParamByName('hostname').AsString := Hostname;
+        ParamByName('path').AsString := Path;
+        ParamByName('udph').AsString := UDPHeaderType;
+        ParamByName('quicsec').AsString := QUICSecurity;
+        ParamByName('quickey').AsString := QUICKey;
+        ExecSQL;
       end;
-      rpSHADOWSOCKS: begin
-        PS0 := P.SSPassword;
-        PI0 := Word(P.SSMethod);
-      end;
-      rpVLESS: begin
-        PS0 := P.VLESSID;
-        PS1 := P.VLESSEncryption;
+    end
+    else
+    begin
+      with SQLQueryUpdateProfile do
+      begin
+        ParamByName('id').AsInteger := ProfileID;
+        ParamByName('name').AsString := Profile.Name;
+        ParamByName('address').AsString := Address;
+        ParamByName('port').AsInteger := Port;
+        ParamByName('protocol').AsInteger := integer(Protocol);
+        ParamByName('network').AsInteger := integer(Network);
+        ParamByName('pv1').AsString := V1;
+        ParamByName('pv2').AsString := V2;
+        ParamByName('flow').AsString := Flow;
+        ParamByName('ssec').AsInteger := integer(StreamSecurity);
+        ParamByName('hostname').AsString := Hostname;
+        ParamByName('path').AsString := Path;
+        ParamByName('udph').AsString := UDPHeaderType;
+        ParamByName('quicsec').AsString := QUICSecurity;
+        ParamByName('quickey').AsString := QUICKey;
+        ExecSQL;
       end;
     end;
-    J.Add(TJSONObject.Create([
-      'name', P.Name,
-      'addr', P.Address,
-      'port',  P.Port,
-      'pc', integer(P.Protocol),
-      's0', PS0,
-      's1', PS1,
-      'i0', PI0,
-      'net', integer(P.Network),
-      'tls', P.EnableTLS,
-      'host', P.Hostname,
-      'path', P.Path,
-      'udph', integer(P.UDPHeaderType),
-      'qs', integer(P.QUICSecurity),
-      'qk', P.QUICKey]));
+    SQLTransactionPrayDB.Commit;
   end;
-  S := J.AsJSON;
-  F.WriteBuffer(Pointer(S)^, Length(S));
-  F.Free;
-  J.Free;
 end;
 
 procedure TPrayMainWindow.TrayIconRunningIconClick(Sender: TObject);

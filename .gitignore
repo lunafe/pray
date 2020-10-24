@@ -2,10 +2,10 @@ Assets
 backup
 lib
 *.exe
+*.dll
 *.dbg
 *.obj
 *.res
 *.lps
 *.json
 *.db
-*.dll

@@ -21,6 +21,7 @@ begin
   ProfileJsonPath := ConcatPaths([ApplicationRootDirectory, 'prayprofiles.json']);
   SettingsJsonPath := ConcatPaths([ApplicationRootDirectory, 'praysettings.json']);
   GeneratedJsonPath := ConcatPaths([TemporaryDirectory, 'praygenerate.json']);
+  DatabaseFilePath := ConcatPaths([ApplicationRootDirectory, 'pray_data.db']);
   Application.Scaled:=True;
   Application.Title:='Pray';
   Application.Initialize;
