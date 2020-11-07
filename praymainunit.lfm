@@ -28,6 +28,7 @@ object PrayMainWindow: TPrayMainWindow
       Top = 8
       Width = 265
       ItemHeight = 0
+      MultiSelect = True
       OnSelectionChange = ListBoxProfilesSelectionChange
       TabOrder = 2
     end

@@ -152,6 +152,7 @@ begin
   if FormEditProfile.SaveAfterExit then
   begin
     SaveProfile(P);
+    SQLTransactionPrayDB.Commit;
     LoadProfiles;
   end;
 end;
@@ -215,6 +216,7 @@ begin
     if FormEditProfile.SaveAfterExit then
     begin
       SaveProfile(CurrentProfile, ProfileIDList[ListBoxProfiles.ItemIndex]);
+      SQLTransactionPrayDB.Commit;
       ListBoxProfiles.Items[ListBoxProfiles.ItemIndex] := CurrentProfile.Name;
     end;
     ListBoxProfilesSelectionChange(nil, False);
@@ -237,6 +239,7 @@ begin
     if SaveAfterExit then
     begin
       for P in ReadyProfileList do SaveProfile(TProfile(P));
+      SQLTransactionPrayDB.Commit;
       LoadProfiles;
     end;
   end;
@@ -248,14 +251,19 @@ var
 begin
   I := ListBoxProfiles.ItemIndex;
   if I <> -1 then
+  if MessageDlg('Confirm remove', 'Delete selected profiles?',
+      mtWarning, mbYesNo, 0, mbNo) = mrYes then
   begin
-    ListBoxProfiles.DeleteSelected;
-    with SQLQueryDeleteProfile do
+    //ListBoxProfiles.DeleteSelected;
+    for I := ListBoxProfiles.Items.Count - 1 downto 0 do
     begin
-      ParamByName('id').AsInteger := ProfileIDList[I];
-      ExecSQL;
+      if ListBoxProfiles.Selected[I] then
+      with SQLQueryDeleteProfile do begin
+        ParamByName('id').AsInteger := ProfileIDList[I];
+        ExecSQL;
+        //ProfileIDList.Delete(I);
+      end;
     end;
-    ProfileIDList.Delete(I);
     SQLTransactionPrayDB.Commit;
     LoadProfiles;
     ListBoxProfilesSelectionChange(nil, False);
@@ -481,7 +489,7 @@ begin
         ExecSQL;
       end;
     end;
-    SQLTransactionPrayDB.Commit;
+    //SQLTransactionPrayDB.Commit;
   end;
 end;
 
