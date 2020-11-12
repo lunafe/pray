@@ -132,6 +132,7 @@ begin
     EditVLESSUUID.Text := VLESSID;
     EditTrojanPassword.Text := TrojanPassword;
     ComboBoxFlow.Text := Flow;
+    CheckBoxEnableTLS.Checked := False;
     if StreamSecurity = soTLS then CheckBoxEnableTLS.Checked := True;
     if Protocol <> rpVLESS then EditVLESSEncryption.Text := 'none';
     AllowXTLS(True);
