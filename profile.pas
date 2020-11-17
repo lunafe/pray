@@ -214,6 +214,7 @@ begin
   C.SetQUIC(QUICSecurity, QUICKey);
   C.SetLogLevel(Settings.V2rayLogLevel);
   C.UDPHeaderType := UDPHeaderType;
+  C.TLSAllowInsecure := Settings.TLSAllowInsecure;
   if Network = rtKCP then
   begin
     C.KCPMTU := Settings.KCPMTU;

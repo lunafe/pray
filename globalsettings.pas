@@ -20,6 +20,7 @@ type
     ButtonCancel: TButton;
     ButtonSaveConfigs: TButton;
     ButtonFindV2rayBinary: TButton;
+    CheckBoxTLSAllowInsecure: TCheckBox;
     CheckBoxEnableMux: TCheckBox;
     CheckBoxCongestion: TCheckBox;
     CheckBoxEnableHTTPProxy: TCheckBox;
@@ -29,7 +30,7 @@ type
     EditV2rayAssetsPath: TEdit;
     EditDnsServers: TEdit;
     EditV2rayPath: TEdit;
-    GroupBoxMux: TGroupBox;
+    GroupBoxOthers: TGroupBox;
     GroupBoxDNSServers: TGroupBox;
     GroupBoxKCPSettings: TGroupBox;
     GroupBoxV2rayConfig: TGroupBox;
@@ -194,6 +195,7 @@ begin
         'dns': DNSServers := ValueString;
         'mux_enabled': MuxEnabled := ValueString.ToBoolean;
         'mux_concurrency': MuxConcurrency := ValueString.ToInteger;
+        'tls_allowinsecure': TLSAllowInsecure := ValueString.ToBoolean;
       end;
       Next;
     end;
@@ -236,6 +238,7 @@ begin
     ComboBoxDomainStrategy.ItemIndex := integer(DomainStrategy);
     CheckBoxEnableMux.Checked := MuxEnabled;
     SpinEditMuxConcurrency.Value := MuxConcurrency;
+    CheckBoxTLSAllowInsecure.Checked := TLSAllowInsecure;
     CheckBoxEnableHTTPProxyEditingDone(nil);
     CheckBoxEnableSocksProxyEditingDone(nil);
     CheckBoxEnableMuxEditingDone(nil);
@@ -342,6 +345,11 @@ begin
       begin
         KCPWriteBufferSize := SpinEditWriteBufferSize.Value;
         UpdateSQL('kcp_wbufsize', KCPWriteBufferSize.ToString);
+      end;
+      if TLSAllowInsecure <> CheckBoxTLSAllowInsecure.Checked then
+      begin
+        TLSAllowInsecure := CheckBoxTLSAllowInsecure.Checked;
+        UpdateSQL('tls_allowinsecure', KCPWriteBufferSize.ToString);
       end;
       if DNSServers <> EditDnsServers.Text then
       begin

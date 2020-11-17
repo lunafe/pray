@@ -25,6 +25,7 @@ type
     EnableLocalSocksUDP: boolean;
     StreamSecurity: TSecurityOptions;
     TLSServerName: string;
+    TLSAllowInsecure: boolean;
     RemoteHostname: string;
     RemotePath: string;
     KCPMTU: word;
@@ -167,6 +168,7 @@ begin
   LogLevel := 'debug';
   NetworkTransport := rtTCP;
   TLSServerName := '';
+  TLSAllowInsecure := False;
   UDPHeaderType := 'none';
   KCPMTU := 1350;
   KCPTTI := 20;
@@ -494,7 +496,7 @@ begin
   case StreamSecurity of
     soTLS: Result.Add('tlsSettings', TJSONObject.Create([
       'serverName', TLSServerName,
-      'allowInsecure', False]));
+      'allowInsecure', TLSAllowInsecure]));
     soXTLS: Result.Add('xtlsSettings', TJSONObject.Create([
       'serverName', TLSServerName,
       'allowInsecure', False]));

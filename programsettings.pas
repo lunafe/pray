@@ -17,6 +17,7 @@ type
     V2rayAssetsPath: string;
     V2rayLogLevel: TV2rayLogLevel;
     DNSServers: string;
+    TLSAllowInsecure: boolean;
     KCPMTU: word;
     KCPTTI: byte;
     KCPUplinkCapacity: word;
@@ -45,6 +46,7 @@ begin
   V2rayBinaryPath := ConcatPaths([ApplicationRoot, 'v2ray.exe']);
   V2rayAssetsPath := ApplicationRoot;
   DNSServers := '208.67.222.222,208.67.220.220';
+  TLSAllowInsecure := False;
   KCPMTU := 1350;
   KCPTTI := 20;
   KCPUplinkCapacity := 5;

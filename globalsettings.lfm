@@ -248,7 +248,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Left = 8
           Height = 15
           Top = 4
-          Width = 29
+          Width = 28
           Caption = 'MTU:'
           ParentColor = False
         end
@@ -315,7 +315,7 @@ object FormGlobalSettings: TFormGlobalSettings
           Left = 8
           Height = 15
           Top = 28
-          Width = 20
+          Width = 18
           Caption = 'TTI:'
           ParentColor = False
         end
@@ -394,21 +394,21 @@ object FormGlobalSettings: TFormGlobalSettings
           Text = 'IPIfNonMatch'
         end
       end
-      object GroupBoxMux: TGroupBox
+      object GroupBoxOthers: TGroupBox
         Left = 200
-        Height = 48
+        Height = 144
         Top = 72
         Width = 225
-        Caption = 'Mux'
-        ClientHeight = 28
+        Caption = 'Others'
+        ClientHeight = 124
         ClientWidth = 221
         TabOrder = 2
         object CheckBoxEnableMux: TCheckBox
           Left = 7
           Height = 19
           Top = 2
-          Width = 55
-          Caption = 'Enable'
+          Width = 82
+          Caption = 'Enable Mux'
           OnEditingDone = CheckBoxEnableMuxEditingDone
           TabOrder = 0
         end
@@ -431,6 +431,14 @@ object FormGlobalSettings: TFormGlobalSettings
           Anchors = [akTop, akRight]
           Caption = 'Concurrency:'
           ParentColor = False
+        end
+        object CheckBoxTLSAllowInsecure: TCheckBox
+          Left = 7
+          Height = 19
+          Top = 24
+          Width = 118
+          Caption = 'TLS Allow Insecure'
+          TabOrder = 2
         end
       end
     end

@@ -282,8 +282,10 @@ end;
 procedure TPrayMainWindow.FormCreate(Sender: TObject);
 var
   DBVersion: integer;
+  DBNeedUpgrade: boolean;
 begin
   DBVersion := 0;
+  DBNeedUpgrade := True;
   ProfileIDList := TIntegerList.Create;
   SQLConnectorPrayDB.DatabaseName := DatabaseFilePath;
   try
@@ -294,24 +296,22 @@ begin
     on E: Exception do
       SQLQueryDBVersion.Close;
   end;
-  if DBVersion = 0 then
-  begin
-    SQLScriptInitDatabase.Execute;
-    SQLTransactionPrayDB.Commit;
+  if DBVersion = 3 then DBNeedUpgrade := False;
+  if DBVersion = 0 then DBVersion := 3
+  else SQLScriptInitDatabase.Script.Clear;
+  if DBVersion = 1 then with SQLScriptInitDatabase.Script do begin
+    Add('ALTER TABLE `profiles` RENAME `tls_enabled` TO `stream_security`;');
+    Add('ALTER TABLE `profiles` ADD `flow` TEXT;');
     DBVersion := 2;
   end;
-  if DBVersion = 1 then
-  begin
-    with SQLScriptInitDatabase.Script do
-    begin
-      Clear;
-      Add('ALTER TABLE `profiles` RENAME `tls_enabled` TO `stream_security`;');
-      Add('ALTER TABLE `profiles` ADD `flow` TEXT;');
-      Add('UPDATE `settings` SET `value`=''2'' WHERE `name`=''pray_dbversion'';');
-    end;
-    SQLScriptInitDatabase.Execute;
+  if DBVersion = 2 then with SQLScriptInitDatabase.Script do begin
+    Add('INSERT INTO `settings` VALUES(''tls_allowinsecure'', ''0'');');
+    DBVersion := 3;
+  end;
+  if DBNeedUpgrade then with SQLScriptInitDatabase do begin
+    Script.Add('UPDATE `settings` SET `value`=''3'' WHERE `name`=''pray_dbversion'';');
+    Execute;
     SQLTransactionPrayDB.Commit;
-    DBVersion := 2;
   end;
   LoadProfiles;
   ListBoxProfilesSelectionChange(nil, False);
