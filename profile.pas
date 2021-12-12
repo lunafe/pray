@@ -25,6 +25,8 @@ type
     StreamSecurity: TSecurityOptions;
     Hostname: string;
     Path: string;
+    WSEDLength: word;
+    WSEDHeader: string;
     UDPHeaderType: string;
     QUICSecurity: string;
     QUICKey: string;
@@ -61,6 +63,19 @@ begin
         Result := Result + Source[I - 1];
       Inc(I);
     end;
+end;
+
+function URLEncode(S: string): AnsiString;
+var
+  C: AnsiChar;
+begin
+  Result := '';
+  for C in S do begin
+    if ((Ord(C) < 65) or (Ord(C) > 90)) and ((Ord(C) < 97) or (Ord(C) > 122)) then begin
+      Result := Result + '%' + IntToHex(Ord(C), 2);
+    end else
+      Result := Result + C;
+  end;
 end;
 
 function ParseLinkToProfile(Link: string; var LinkProfile: TProfile): boolean;
@@ -211,6 +226,7 @@ begin
   if Settings.MuxEnabled then C.SetMux(Settings.MuxConcurrency);
   C.SetTransport(Network, StreamSecurity);
   C.SetHostPath(Hostname, Path);
+  C.SetWSEarlyData(WSEDLength, WSEDHeader);
   C.SetQUIC(QUICSecurity, QUICKey);
   C.SetLogLevel(Settings.V2rayLogLevel);
   C.UDPHeaderType := UDPHeaderType;
@@ -235,6 +251,8 @@ var
   PathStr: string;
   TypeStr: string;
   R: TJSONObject;
+  I: integer;
+  UrlElements: TStringList;
 begin
   case Network of
     rtKCP:
@@ -272,6 +290,40 @@ begin
     rpSHADOWSOCKS:
       Result := 'ss://' + EncodeStringBase64(Format('%s:%s@%s:%d', [
         SSMethod, SSPassword, Address, Port]));
+    rpVLESS:
+    begin
+      UrlElements := TStringList.Create;
+      Result := 'vless://' + Format('%s@%s:%d', [VLESSID, Address, Port]);
+      if VLESSEncryption <> 'none' then UrlElements.Add('encryption=' + VLESSEncryption);
+      if Network <> rtTCP then UrlElements.Add('type=' + TransportToString(Network));
+      case Network of
+        rtQUIC:
+        begin
+          if QUICSecurity <> 'none' then UrlElements.Add('quicSecurity=' + QUICSecurity);
+          if QUICKey <> '' then UrlElements.Add('key=' + URLEncode(QUICKey));
+          if UDPHeaderType <> 'none' then UrlElements.Add('headerType=' + UDPHeaderType);
+        end;
+        rtWS, rtHTTP:
+        begin
+          if Hostname <> '' then UrlElements.Add('host=' + URLEncode(Hostname));
+          if Path <> '' then UrlElements.Add('path=' + URLEncode(Path));
+        end;
+        rtKCP: if UDPHeaderType <> 'none' then UrlElements.Add('headerType=' + UDPHeaderType);
+      end;
+      if StreamSecurity <> soNONE then
+        UrlElements.Add('security=' + SecurityOptionToString(StreamSecurity));
+      if UrlElements.Count > 0 then
+      begin
+        Result := Result + '/?';
+        for I := 0 to UrlElements.Count - 1 do
+        begin
+          Result := Result + UrlElements[I];
+          if I = UrlElements.Count - 1 then Break;
+          Result := Result + '&';
+        end;
+      end;
+      UrlElements.Free;
+    end;
     else Result := '';
   end;
 end;

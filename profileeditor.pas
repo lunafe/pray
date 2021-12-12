@@ -22,6 +22,7 @@ type
     ComboBoxQUICSecurity: TComboBox;
     ComboBoxNetwork: TComboBox;
     ComboBoxUDPHeaderType: TComboBox;
+    EditWSEDHeaderName: TEdit;
     EditTrojanPassword: TEdit;
     EditVLESSUUID: TEdit;
     EditVLESSEncryption: TEdit;
@@ -35,6 +36,8 @@ type
     GroupBoxGeneral: TGroupBox;
     GroupBoxStream: TGroupBox;
     GroupBoxUser: TGroupBox;
+    LabelWSEDHeaderName: TLabel;
+    LabelWSEDMaxLength: TLabel;
     LabelFlow: TLabel;
     LabelTrojanPassword: TLabel;
     LabelVLESSUUID: TLabel;
@@ -54,6 +57,7 @@ type
     LabelUUID: TLabel;
     LabelProfileName: TLabel;
     PageControlProtocolSwitch: TPageControl;
+    SpinEditWSEDMaxLength: TSpinEdit;
     SpinEditPort: TSpinEdit;
     SpinEditAlterID: TSpinEdit;
     TabSheetTrojanConfig: TTabSheet;
@@ -76,6 +80,7 @@ type
     procedure TiggerUDP(FieldsEnabled: boolean);
     procedure TiggerQUIC(FieldsEnabled: boolean);
     procedure TiggerHostPath(FieldsEnabled: boolean);
+    procedure TiggerWebsocks(FieldsEnabled: boolean);
   end;
 
 var
@@ -111,6 +116,8 @@ begin
       StreamSecurity := soNONE;
     Hostname := EditHostname.Text;
     Path := EditPath.Text;
+    WSEDLength := SpinEditWSEDMaxLength.Value;
+    WSEDHeader := EditWSEDHeaderName.Text;
     UDPHeaderType := ComboBoxUDPHeaderType.Text;
     QUICSecurity := ComboBoxQUICSecurity.Text;
     QUICKey := EditQUICKey.Text;
@@ -151,6 +158,8 @@ begin
     ComboBoxNetwork.ItemIndex := integer(Network);
     EditHostname.Text := Hostname;
     EditPath.Text := Path;
+    SpinEditWSEDMaxLength.Value := WSEDLength;
+    EditWSEDHeaderName.Text := WSEDHeader;
     ComboBoxUDPHeaderType.Text := UDPHeaderType;
     ComboBoxQUICSecurity.Text := QUICSecurity;
     EditQUICKey.Text := QUICKey;
@@ -228,6 +237,14 @@ begin
   EditPath.Enabled := FieldsEnabled;
 end;
 
+procedure TFormEditProfile.TiggerWebsocks(FieldsEnabled: boolean);
+begin
+  LabelWSEDMaxLength.Enabled := FieldsEnabled;
+  LabelWSEDHeaderName.Enabled := FieldsEnabled;
+  SpinEditWSEDMaxLength.Enabled := FieldsEnabled;
+  EditWSEDHeaderName.Enabled := FieldsEnabled;
+end;
+
 procedure TFormEditProfile.ComboBoxNetworkChange(Sender: TObject);
 var
   E: TRemoteTransport;
@@ -238,29 +255,34 @@ begin
     begin
       TiggerQUIC(False);
       TiggerHostPath(False);
+      TiggerWebsocks(False);
       TiggerUDP(True);
     end;
     rtQUIC:
     begin
       TiggerHostPath(False);
+      TiggerWebsocks(False);
       TiggerQUIC(True);
       TiggerUDP(True);
     end;
     rtTCP:
     begin
       TiggerHostPath(False);
+      TiggerWebsocks(False);
       TiggerQUIC(False);
       TiggerUDP(False);
     end;
     rtWS:
     begin
       TiggerHostPath(True);
+      TiggerWebsocks(True);
       TiggerQUIC(False);
       TiggerUDP(False);
     end;
     rtHTTP:
     begin
       TiggerHostPath(True);
+      TiggerWebsocks(False);
       TiggerQUIC(False);
       TiggerUDP(False);
       CheckBoxEnableTLS.Checked := True;

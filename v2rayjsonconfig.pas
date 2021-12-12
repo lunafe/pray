@@ -28,6 +28,8 @@ type
     TLSAllowInsecure: boolean;
     RemoteHostname: string;
     RemotePath: string;
+    WSMaxEarlyData: word;
+    WSEarlyDataHeaderName: string;
     KCPMTU: word;
     KCPTTI: byte;
     KCPUplinkCapacity: word;
@@ -50,6 +52,7 @@ type
     procedure SetHTTPProxy(Port: word);
     procedure SetDNSServers(ServerListString: string);
     procedure SetHostPath(Hostname: string = ''; Path: string = '');
+    procedure SetWSEarlyData(Length: word = 0; HeaderName: string = '');
     procedure SetQUIC(Security: string = 'none'; Key: string = '');
     function ToJSON: TJSONObject;
   protected
@@ -169,6 +172,8 @@ begin
   NetworkTransport := rtTCP;
   TLSServerName := '';
   TLSAllowInsecure := False;
+  WSMaxEarlyData := 0;
+  WSEarlyDataHeaderName := '';
   UDPHeaderType := 'none';
   KCPMTU := 1350;
   KCPTTI := 20;
@@ -268,6 +273,13 @@ begin
   if Security = 'none' then QUICKey := ''
   else QUICKey := Key;
   QUICSecurity := Security;
+end;
+
+procedure TV2rayJsonConfig.SetWSEarlyData(Length: word = 0; HeaderName: string = '');
+begin
+  if Length = 0 then WSEarlyDataHeaderName := ''
+  else WSEarlyDataHeaderName := HeaderName;
+  WSMaxEarlyData := Length;
 end;
 
 procedure TV2rayJsonConfig.SetRoute(RouteType: TRouteListType; RouteList: TStrings);
@@ -504,7 +516,8 @@ begin
   case NetworkTransport of
     rtWS: Result.Add('wsSettings', TJSONObject.Create([
       'path', RemotePath,
-      'headers', TJSONObject.Create(['Host', RemoteHostname])]));
+      'headers', TJSONObject.Create(['Host', RemoteHostname]),
+      'maxEarlyData', WSMaxEarlyData, 'earlyDataHeaderName', WSEarlyDataHeaderName]));
     rtHTTP: Result.Add('httpSettings', TJSONObject.Create([
       'host', TJSONArray.Create([RemoteHostname]),
       'path', RemotePath]));

@@ -12,7 +12,7 @@ object PrayMainWindow: TPrayMainWindow
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDesktopCenter
-  LCLVersion = '2.0.10.0'
+  LCLVersion = '2.0.12.0'
   object PanelMainPanel: TPanel
     Left = 8
     Height = 288
@@ -9732,6 +9732,8 @@ object PrayMainWindow: TPrayMainWindow
       '  `stream_security` INTEGER DEFAULT 0,'
       '  `hostname` TEXT,'
       '  `path` TEXT,'
+      '  `ws_edlength` INTEGER DEFAULT 0,'
+      '  `ws_edheader` TEXT,'
       '  `udp_header` TEXT,'
       '  `quic_security` TEXT,'
       '  `quic_key` TEXT'
@@ -9821,12 +9823,14 @@ object PrayMainWindow: TPrayMainWindow
       '    `protocol`, `network`, `protocol_value1`,'
       '    `protocol_value2`, `flow`,'
       '    `stream_security`, `hostname`, `path`,'
+      '    `ws_edlength`, `ws_edheader`,'
       '    `udp_header`, `quic_security`, `quic_key`'
       '    )'
       'VALUES ('
       '    :name, :address, :port,'
       '    :protocol, :network, :pv1, :pv2,'
       '    :flow, :ssec, :hostname, :path,'
+      '    :wsedlen, :wsedheader,'
       '    :udph, :quicsec, :quickey'
       '    );'
     )
@@ -9888,6 +9892,16 @@ object PrayMainWindow: TPrayMainWindow
       end    
       item
         DataType = ftUnknown
+        Name = 'wsedlen'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'wsedheader'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
         Name = 'udph'
         ParamType = ptInput
       end    
@@ -9915,6 +9929,7 @@ object PrayMainWindow: TPrayMainWindow
       '  `protocol_value1`=:pv1, `protocol_value2`=:pv2,'
       '  `flow`=:flow, `stream_security`=:ssec,'
       '  `hostname`=:hostname, `path`=:path,'
+      '  `ws_edlength`=:wsedlen, `ws_edheader`=:wsedheader,'
       '  `udp_header`=:udph, `quic_security`=:quicsec,'
       '  `quic_key`=:quickey'
       ' WHERE `id`=:id;'
@@ -9973,6 +9988,16 @@ object PrayMainWindow: TPrayMainWindow
       item
         DataType = ftUnknown
         Name = 'path'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'wsedlen'
+        ParamType = ptInput
+      end    
+      item
+        DataType = ftUnknown
+        Name = 'wsedheader'
         ParamType = ptInput
       end    
       item

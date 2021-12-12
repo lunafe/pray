@@ -296,8 +296,8 @@ begin
     on E: Exception do
       SQLQueryDBVersion.Close;
   end;
-  if DBVersion = 3 then DBNeedUpgrade := False;
-  if DBVersion = 0 then DBVersion := 3
+  if DBVersion = 4 then DBNeedUpgrade := False;
+  if DBVersion = 0 then DBVersion := 4
   else SQLScriptInitDatabase.Script.Clear;
   if DBVersion = 1 then with SQLScriptInitDatabase.Script do begin
     Add('ALTER TABLE `profiles` RENAME `tls_enabled` TO `stream_security`;');
@@ -308,8 +308,13 @@ begin
     Add('INSERT INTO `settings` VALUES(''tls_allowinsecure'', ''0'');');
     DBVersion := 3;
   end;
+  if DBVersion = 3 then with SQLScriptInitDatabase.Script do begin
+    Add('ALTER TABLE `profiles` ADD `ws_edlength` INTEGER DEFAULT 0;');
+    Add('ALTER TABLE `profiles` ADD `ws_edheader` TEXT;');
+    DBVersion := 4;
+  end;
   if DBNeedUpgrade then with SQLScriptInitDatabase do begin
-    Script.Add('UPDATE `settings` SET `value`=''3'' WHERE `name`=''pray_dbversion'';');
+    Script.Add('UPDATE `settings` SET `value`=''4'' WHERE `name`=''pray_dbversion'';');
     Execute;
     SQLTransactionPrayDB.Commit;
   end;
@@ -326,6 +331,10 @@ procedure TPrayMainWindow.FormWindowStateChange(Sender: TObject);
 begin
   if WindowState = wsMinimized then
   begin
+    if FormGlobalSettings.Showing then FormGlobalSettings.Close;
+    if FormShareLink.Showing then FormShareLink.Close;
+    if FormImportLinks.Showing then FormImportLinks.Close;
+    if FormEditProfile.Showing then FormEditProfile.Close;
     TrayIconRunningIcon.Show;
     Hide;
   end;
@@ -358,6 +367,8 @@ begin
       StreamSecurity := TSecurityOptions(FieldByName('stream_security').AsInteger);
       Hostname := FieldByName('hostname').AsString;
       Path := FieldByName('path').AsString;
+      WSEDLength := FieldByName('ws_edlength').AsInteger;
+      WSEDHeader := FieldByName('ws_edheader').AsString;
       UDPHeaderType := FieldByName('udp_header').AsString;
       QUICSecurity := FieldByName('quic_security').AsString;
       QUICKey := FieldByName('quic_key').AsString;
@@ -461,6 +472,8 @@ begin
         ParamByName('ssec').AsInteger := integer(StreamSecurity);
         ParamByName('hostname').AsString := Hostname;
         ParamByName('path').AsString := Path;
+        ParamByName('wsedlen').AsInteger := WSEDLength;
+        ParamByName('wsedheader').AsString := WSEDHeader;
         ParamByName('udph').AsString := UDPHeaderType;
         ParamByName('quicsec').AsString := QUICSecurity;
         ParamByName('quickey').AsString := QUICKey;
@@ -483,6 +496,8 @@ begin
         ParamByName('ssec').AsInteger := integer(StreamSecurity);
         ParamByName('hostname').AsString := Hostname;
         ParamByName('path').AsString := Path;
+        ParamByName('wsedlen').AsInteger := WSEDLength;
+        ParamByName('wsedheader').AsString := WSEDHeader;
         ParamByName('udph').AsString := UDPHeaderType;
         ParamByName('quicsec').AsString := QUICSecurity;
         ParamByName('quickey').AsString := QUICKey;
