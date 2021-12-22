@@ -6,12 +6,12 @@ before_script:
   - GITVER=$(git describe --tags || git rev-parse --short HEAD)
   - mkdir cache || true
   - cd cache
-  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.10/fpc-src_3.2.0-1_amd64.deb
-  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.10/fpc-laz_3.2.0-1_amd64.deb
-  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.10/lazarus-project_2.0.10-0_amd64.deb
-  - sudo dpkg -i fpc-laz_3.2.0-1_amd64.deb
-  - sudo dpkg -i fpc-src_3.2.0-1_amd64.deb
-  - sudo dpkg -i lazarus-project_2.0.10-0_amd64.deb || true
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.12/fpc-src_3.2.0-1_amd64.deb
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.12/fpc-laz_3.2.0-1_amd64.deb
+  - curl -LO https://sourceforge.net/projects/lazarus/files/Lazarus%20Linux%20amd64%20DEB/Lazarus%202.0.12/lazarus-project_2.0.12-0_amd64.deb
+  - sudo dpkg -i fpc-laz_3.2.0-1_amd64.deb || true
+  - sudo dpkg -i fpc-src_3.2.0-1_amd64.deb || true
+  - sudo dpkg -i lazarus-project_2.0.12-0_amd64.deb || true
   - sudo apt-get update
   - sudo apt-get install --no-install-recommends -y -f
   - cd /usr/share/fpcsrc/3.2.0
@@ -25,8 +25,7 @@ after_script:
   - mv Pray-release.exe artifacts/
   - cd artifacts
   - zip pray-ci-artifacts.zip Pray-release.exe
-  - curl -T pray-ci-artifacts.zip https://filepush.co/upload/pray-ci-artifacts-$GITVER.zip && echo || true
-
+  - curl -T pray-ci-artifacts.zip https://transfer.sh/pray-ci-artifacts-$GITVER.zip && echo || true
 
 jobs:
   include:
